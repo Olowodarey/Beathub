@@ -6,6 +6,7 @@ import { RevenueBarChart } from "@/components/charts/revenue-bar-chart";
 import { PlatformDonut } from "@/components/charts/platform-donut";
 import { UserGrowthChart } from "@/components/charts/user-growth-chart";
 import { AdRevenueWidget } from "@/components/dashboard/ad-revenue-widget";
+import { CreatorApplicationCard } from "@/components/dashboard/creator-application-card";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -62,6 +63,7 @@ export default function DashboardOverview() {
 
   const { role, personaType } = currentUser.membership;
   const isCreator = role === "MEMBER" && personaType === "CREATOR";
+  const isListener = role === "MEMBER" && personaType === "LISTENER";
   const firstName = currentUser.user.name.split(" ")[0];
   const stats = dashboard?.stats;
 
@@ -69,14 +71,18 @@ export default function DashboardOverview() {
     <div className="mx-auto flex max-w-7xl flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
-          {isCreator ? "Your dashboard" : "Overview"}
+          {isCreator ? "Your dashboard" : isListener ? "Welcome" : "Overview"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {isCreator
             ? `Welcome back, ${firstName}. Here's how your catalog is doing.`
+            : isListener
+            ? `Welcome, ${firstName}. Head to Library to start listening.`
             : `Welcome back, ${firstName}. Here's what's happening across ${currentUser.team.name}.`}
         </p>
       </div>
+
+      {isListener ? <CreatorApplicationCard /> : null}
 
       {error ? (
         <PageMessage tone="error">
@@ -84,6 +90,7 @@ export default function DashboardOverview() {
         </PageMessage>
       ) : null}
 
+      {isListener ? null : (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {isCreator ? (
           <>
@@ -169,28 +176,33 @@ export default function DashboardOverview() {
           </>
         )}
       </div>
+      )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <UserGrowthChart data={analytics?.userGrowthSeries ?? []} />
-        <RevenueBarChart data={analytics?.revenueSeries ?? []} />
-      </div>
+      {isListener ? null : (
+        <>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <UserGrowthChart data={analytics?.userGrowthSeries ?? []} />
+            <RevenueBarChart data={analytics?.revenueSeries ?? []} />
+          </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <PlatformDonut data={analytics?.platformShare ?? []} />
-        </div>
-        <div className="flex flex-col gap-4">
-          <RoleGate allow={["OWNER"]}>
-            <AdRevenueWidget
-              adRevenueUsd={stats?.adRevenueUsd ?? 0}
-              adRevenueTrendPct={stats?.adRevenueTrendPct ?? 0}
-            />
-          </RoleGate>
-          <RecentActivity items={dashboard?.recentActivity ?? []} />
-        </div>
-      </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <PlatformDonut data={analytics?.platformShare ?? []} />
+            </div>
+            <div className="flex flex-col gap-4">
+              <RoleGate allow={["OWNER"]}>
+                <AdRevenueWidget
+                  adRevenueUsd={stats?.adRevenueUsd ?? 0}
+                  adRevenueTrendPct={stats?.adRevenueTrendPct ?? 0}
+                />
+              </RoleGate>
+              <RecentActivity items={dashboard?.recentActivity ?? []} />
+            </div>
+          </div>
 
-      <QuickActions />
+          <QuickActions />
+        </>
+      )}
     </div>
   );
 }

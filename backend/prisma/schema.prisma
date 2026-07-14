@@ -16,8 +16,15 @@ enum Role {
 }
 
 enum PersonaType {
+  LISTENER
   CREATOR
   LABEL_REP
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum UserStatus {
@@ -67,11 +74,13 @@ model User {
   status    UserStatus @default(ACTIVE)
   createdAt DateTime   @default(now())
 
-  memberships       Membership[]
-  uploadedContent   Content[]    @relation("ContentUploader")
-  campaignsCreated  AdCampaign[] @relation("CampaignRequester")
-  campaignsReviewed AdCampaign[] @relation("CampaignReviewer")
-  invitationsSent   Invitation[] @relation("InvitationInviter")
+  memberships          Membership[]
+  uploadedContent      Content[]            @relation("ContentUploader")
+  campaignsCreated     AdCampaign[]         @relation("CampaignRequester")
+  campaignsReviewed    AdCampaign[]         @relation("CampaignReviewer")
+  invitationsSent      Invitation[]         @relation("InvitationInviter")
+  creatorApplications  CreatorApplication[] @relation("CreatorApplicant")
+  creatorAppsReviewed  CreatorApplication[] @relation("CreatorApplicationReviewer")
 }
 
 model Team {
@@ -81,10 +90,11 @@ model Team {
   logoUrl   String?
   createdAt DateTime @default(now())
 
-  memberships Membership[]
-  invitations Invitation[]
-  campaigns   AdCampaign[]
-  content     Content[]
+  memberships         Membership[]
+  invitations         Invitation[]
+  campaigns           AdCampaign[]
+  content             Content[]
+  creatorApplications CreatorApplication[]
 }
 
 model Membership {
@@ -142,6 +152,25 @@ model Content {
 
   @@index([teamId])
   @@index([status])
+}
+
+model CreatorApplication {
+  id           String            @id @default(cuid())
+  userId       String
+  teamId       String
+  message      String?
+  status       ApplicationStatus @default(PENDING)
+  reviewerId   String?
+  reviewerNote String?
+  createdAt    DateTime          @default(now())
+  decidedAt    DateTime?
+
+  user     User  @relation("CreatorApplicant", fields: [userId], references: [id], onDelete: Cascade)
+  team     Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("CreatorApplicationReviewer", fields: [reviewerId], references: [id])
+
+  @@index([teamId, status])
+  @@index([userId])
 }
 
 model AdCampaign {

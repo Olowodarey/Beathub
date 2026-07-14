@@ -21,8 +21,11 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { useCurrentUser } from "@/lib/current-user";
 
 const roleLabel = (role: string, personaType: string | null) => {
-  if (role === "MEMBER")
-    return personaType === "LABEL_REP" ? "Label rep" : "Creator";
+  if (role === "MEMBER") {
+    if (personaType === "LABEL_REP") return "Label rep";
+    if (personaType === "CREATOR") return "Creator";
+    return "Listener";
+  }
   return role.charAt(0) + role.slice(1).toLowerCase();
 };
 
@@ -98,7 +101,7 @@ export function Header() {
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => void signOut({ redirectUrl: "/login" })}>
+            <DropdownMenuItem onClick={() => void signOut({ redirectUrl: "/login" })}>
               <LogOut className="mr-2 h-4 w-4" aria-hidden />
               Sign out
             </DropdownMenuItem>

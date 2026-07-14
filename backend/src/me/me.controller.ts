@@ -1,7 +1,9 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthedRequest } from '../auth/request-user.type';
+import { CreatorApplicationsService } from '../creator-applications/creator-applications.service';
+import { SubmitApplicationDto } from '../creator-applications/dto/submit-application.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { mapMembership, mapTeam, mapUser } from '../common/mappers';
 
@@ -10,7 +12,10 @@ type Authed = NonNullable<AuthedRequest['authUser']>;
 @Controller('me')
 @UseGuards(ClerkAuthGuard)
 export class MeController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly creatorApplications: CreatorApplicationsService,
+  ) {}
 
   @Get()
   async get(@CurrentUser() authUser: Authed) {
@@ -22,5 +27,18 @@ export class MeController {
       memberships: authUser.memberships.map(mapMembership),
       teams: teams.map(mapTeam),
     };
+  }
+
+  @Get('creator-application')
+  getMyApplication(@CurrentUser() authUser: Authed) {
+    return this.creatorApplications.mine(authUser.user.id);
+  }
+
+  @Post('creator-application')
+  submitApplication(
+    @CurrentUser() authUser: Authed,
+    @Body() dto: SubmitApplicationDto,
+  ) {
+    return this.creatorApplications.submit(authUser.user.id, dto.message);
   }
 }

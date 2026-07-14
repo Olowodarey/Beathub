@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { ContentModule } from './content/content.module';
+import { CreatorApplicationsModule } from './creator-applications/creator-applications.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { MeModule } from './me/me.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -20,6 +21,7 @@ import { TeamsModule } from './teams/teams.module';
     CampaignsModule,
     MeModule,
     SystemModule,
+    CreatorApplicationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

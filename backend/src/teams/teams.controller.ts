@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   Param,
@@ -12,7 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ContentStatus, InvitationStatus } from '@prisma/client';
+import { ApplicationStatus, ContentStatus, InvitationStatus } from '@prisma/client';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -20,6 +21,8 @@ import { Roles } from '../auth/roles.decorator';
 import type { AuthedRequest } from '../auth/request-user.type';
 import { ContentService } from '../content/content.service';
 import { CreateContentDto } from '../content/dto/create-content.dto';
+import { CreatorApplicationsService } from '../creator-applications/creator-applications.service';
+import { DecideApplicationDto } from '../creator-applications/dto/decide-application.dto';
 import { InvitationsService } from '../invitations/invitations.service';
 import { AnalyticsService } from './analytics.service';
 import { DashboardService } from './dashboard.service';
@@ -38,6 +41,7 @@ export class TeamsController {
     private readonly dashboard: DashboardService,
     private readonly analytics: AnalyticsService,
     private readonly content: ContentService,
+    private readonly creatorApplications: CreatorApplicationsService,
   ) {}
 
   @Get('dashboard')
@@ -108,6 +112,12 @@ export class TeamsController {
     @Body() dto: CreateContentDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    const membership = authUser.memberships.find((m) => m.teamId === teamId)!;
+    if (membership.role === 'MEMBER' && membership.personaType === 'LISTENER') {
+      throw new ForbiddenException(
+        'Listeners cannot upload. Apply to become a creator first.',
+      );
+    }
     return this.content.uploadForTeam(teamId, authUser.user.id, dto, file);
   }
 
@@ -134,6 +144,32 @@ export class TeamsController {
   @Roles('OWNER')
   listInvoices(@Param('teamId') teamId: string) {
     return this.teams.listInvoices(teamId);
+  }
+
+  @Get('creator-applications')
+  @Roles('OWNER', 'ADMIN')
+  listCreatorApplications(
+    @Param('teamId') teamId: string,
+    @Query('status') status?: ApplicationStatus,
+  ) {
+    return this.creatorApplications.listForTeam(teamId, status);
+  }
+
+  @Post('creator-applications/:id/decision')
+  @Roles('OWNER', 'ADMIN')
+  decideCreatorApplication(
+    @Param('teamId') teamId: string,
+    @Param('id') id: string,
+    @CurrentUser() authUser: Authed,
+    @Body() dto: DecideApplicationDto,
+  ) {
+    return this.creatorApplications.decide(
+      teamId,
+      id,
+      authUser.user.id,
+      dto.status,
+      dto.reviewerNote,
+    );
   }
 
   @Post('campaigns')

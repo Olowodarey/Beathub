@@ -6,6 +6,7 @@ import {
   Megaphone,
   Music2,
   Settings,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import type { PersonaType, Role } from "@/types";
@@ -33,9 +34,17 @@ export const navItems: NavItem[] = [
     roles: ["OWNER", "ADMIN"],
   },
   {
+    label: "Creator applications",
+    href: "/dashboard/creator-applications",
+    icon: ShieldCheck,
+    roles: ["OWNER", "ADMIN"],
+  },
+  {
     label: "Content",
     href: "/dashboard/content",
     icon: Music2,
+    // Listeners can't upload — the Content page is for creators and admins.
+    personas: ["CREATOR", "LABEL_REP"],
   },
   {
     label: "Library",

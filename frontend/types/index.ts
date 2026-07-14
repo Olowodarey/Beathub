@@ -5,7 +5,27 @@
 export type Role = "OWNER" | "ADMIN" | "MEMBER";
 
 // MEMBER splits into two UI personas driven by personaType, NOT a separate role.
-export type PersonaType = "CREATOR" | "LABEL_REP";
+export type PersonaType = "LISTENER" | "CREATOR" | "LABEL_REP";
+
+export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface CreatorApplication {
+  id: string;
+  userId: string;
+  teamId: string;
+  message: string | null;
+  status: ApplicationStatus;
+  reviewerId: string | null;
+  reviewerNote: string | null;
+  createdAt: string;
+  decidedAt: string | null;
+}
+
+export interface CreatorApplicationRow extends CreatorApplication {
+  applicantName: string;
+  applicantEmail: string;
+  reviewerName: string | null;
+}
 
 export type UserStatus = "ACTIVE" | "INVITED" | "SUSPENDED";
 
