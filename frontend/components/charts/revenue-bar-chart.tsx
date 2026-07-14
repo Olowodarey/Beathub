@@ -26,11 +26,11 @@ export function RevenueBarChart({ data }: { data: RevenuePoint[] }) {
         </p>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="h-64 w-full">
+        <div className="h-56 w-full sm:h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
-              margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
+              margin={{ top: 12, right: 4, left: -12, bottom: 0 }}
               barCategoryGap={16}
             >
               <CartesianGrid
@@ -41,15 +41,17 @@ export function RevenueBarChart({ data }: { data: RevenuePoint[] }) {
               <XAxis
                 dataKey="month"
                 stroke="var(--muted-foreground)"
-                fontSize={11}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
+                interval="preserveStartEnd"
               />
               <YAxis
                 stroke="var(--muted-foreground)"
-                fontSize={11}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
+                width={42}
                 tickFormatter={(v: number) => `$${formatCompactNumber(v)}`}
               />
               <Tooltip

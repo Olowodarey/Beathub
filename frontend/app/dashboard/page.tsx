@@ -106,7 +106,9 @@ export default function DashboardOverview() {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+          Overview
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Welcome back, {firstName}. Here&apos;s what&apos;s happening across{" "}
           {currentUser.team.name}.
@@ -119,44 +121,42 @@ export default function DashboardOverview() {
         </PageMessage>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <>
-          <StatCard
-            label="Total users"
-            value={loading || !stats ? "—" : formatCompactNumber(stats.totalUsers)}
-            icon={Users}
-          />
-          <StatCard
-            label="Total plays"
-            value={
-              loading || !stats ? "—" : formatCompactNumber(stats.totalPlays)
-            }
-            icon={Play}
-            hint={
-              stats
-                ? `${formatCompactNumber(stats.activeCreators)} active creators`
-                : undefined
-            }
-          />
-          <StatCard
-            label="Creator payouts"
-            value={
-              loading || !stats ? "—" : formatCurrency(stats.totalRevenueUsd)
-            }
-            icon={DollarSign}
-            hint="$0.004 per play"
-          />
-          <StatCard
-            label="Content uploads"
-            value={
-              loading || !stats
-                ? "—"
-                : formatCompactNumber(stats.contentUploadsThisWeek)
-            }
-            icon={Music2}
-            hint="This week"
-          />
-        </>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <StatCard
+          label="Total users"
+          value={loading || !stats ? "—" : formatCompactNumber(stats.totalUsers)}
+          icon={Users}
+        />
+        <StatCard
+          label="Total plays"
+          value={
+            loading || !stats ? "—" : formatCompactNumber(stats.totalPlays)
+          }
+          icon={Play}
+          hint={
+            stats
+              ? `${formatCompactNumber(stats.activeCreators)} active creators`
+              : undefined
+          }
+        />
+        <StatCard
+          label="Creator payouts"
+          value={
+            loading || !stats ? "—" : formatCurrency(stats.totalRevenueUsd)
+          }
+          icon={DollarSign}
+          hint="$0.004 per play"
+        />
+        <StatCard
+          label="Content uploads"
+          value={
+            loading || !stats
+              ? "—"
+              : formatCompactNumber(stats.contentUploadsThisWeek)
+          }
+          icon={Music2}
+          hint="This week"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

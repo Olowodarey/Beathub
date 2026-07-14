@@ -26,11 +26,11 @@ export function UserGrowthChart({ data }: { data: UserGrowthPoint[] }) {
         </p>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="h-64 w-full">
+        <div className="h-56 w-full sm:h-64">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
-              margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
+              margin={{ top: 12, right: 4, left: -18, bottom: 0 }}
             >
               <defs>
                 <linearGradient id="creators" x1="0" y1="0" x2="0" y2="1">
@@ -50,15 +50,17 @@ export function UserGrowthChart({ data }: { data: UserGrowthPoint[] }) {
               <XAxis
                 dataKey="month"
                 stroke="var(--muted-foreground)"
-                fontSize={11}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
+                interval="preserveStartEnd"
               />
               <YAxis
                 stroke="var(--muted-foreground)"
-                fontSize={11}
+                fontSize={10}
                 tickLine={false}
                 axisLine={false}
+                width={36}
                 tickFormatter={formatCompactNumber}
               />
               <Tooltip

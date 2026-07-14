@@ -28,8 +28,8 @@ export function PlatformDonut({ data }: { data: PlatformShare[] }) {
             No platform data yet.
           </p>
         ) : (
-          <div className="flex flex-col items-center gap-4 md:flex-row md:items-stretch">
-            <div className="h-48 w-full md:w-1/2">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-stretch">
+            <div className="h-44 w-full sm:h-48 sm:w-1/2">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Tooltip
@@ -57,7 +57,7 @@ export function PlatformDonut({ data }: { data: PlatformShare[] }) {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <ul className="grid flex-1 grid-cols-2 gap-3 self-center md:grid-cols-1">
+            <ul className="grid flex-1 grid-cols-2 gap-3 self-center sm:grid-cols-1">
               {data.map((slice, index) => (
                 <li
                   key={slice.name}
