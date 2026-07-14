@@ -1,5 +1,10 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { systemGauges } from "@/lib/mock-data";
+import { useApiClient } from "@/lib/api-client";
+import type { SystemHealthResponse } from "@/lib/api-types";
+import type { SystemGauge } from "@/types";
 import { cn } from "@/lib/utils";
 
 const intentColor: Record<"good" | "warn" | "bad", string> = {
@@ -15,35 +20,74 @@ const intentText: Record<"good" | "warn" | "bad", string> = {
 };
 
 export function SystemGauges() {
+  const api = useApiClient();
+  const [gauges, setGauges] = useState<SystemGauge[] | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get<SystemHealthResponse>("/system/health")
+      .then((res) => {
+        if (!cancelled) setGauges(res.gauges);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e as Error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
+
+  if (error) {
+    return (
+      <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+        Couldn&apos;t load system health. {error.message}
+      </div>
+    );
+  }
+
+  const items = gauges ?? Array.from({ length: 4 }, (_, i) => ({
+    label: "Loading",
+    value: 0,
+    unit: "",
+    intent: "good" as const,
+    _skeleton: true,
+    _key: i,
+  }));
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {systemGauges.map((gauge) => {
+      {items.map((gauge, i) => {
         const clamped = Math.min(100, Math.max(0, gauge.value));
         const percent = gauge.unit === "%" ? clamped : Math.min(100, gauge.value / 3);
+        const isSkeleton = "_skeleton" in gauge;
         return (
-          <Card key={gauge.label}>
+          <Card key={isSkeleton ? `skeleton-${i}` : gauge.label}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {gauge.label}
+                {isSkeleton ? " " : gauge.label}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <Gauge percent={percent} color={intentColor[gauge.intent]} />
               <div className="mt-3 flex items-baseline justify-between">
                 <p className="text-2xl font-semibold tracking-tight tabular-nums">
-                  {gauge.value}
+                  {isSkeleton ? "—" : gauge.value}
                   <span className="ml-1 text-sm font-normal text-muted-foreground">
                     {gauge.unit}
                   </span>
                 </p>
-                <span
-                  className={cn(
-                    "text-xs font-medium capitalize",
-                    intentText[gauge.intent],
-                  )}
-                >
-                  {gauge.intent}
-                </span>
+                {!isSkeleton ? (
+                  <span
+                    className={cn(
+                      "text-xs font-medium capitalize",
+                      intentText[gauge.intent],
+                    )}
+                  >
+                    {gauge.intent}
+                  </span>
+                ) : null}
               </div>
             </CardContent>
           </Card>

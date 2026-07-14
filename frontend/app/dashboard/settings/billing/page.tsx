@@ -84,7 +84,7 @@ export default function SettingsBillingPage() {
             Past bills issued to {currentUser.team.name}.
           </p>
         </div>
-        <InvoicesTable />
+        <InvoicesTable teamId={currentUser.team.id} />
       </section>
     </div>
   );

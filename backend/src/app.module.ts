@@ -7,6 +7,7 @@ import { ContentModule } from './content/content.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { MeModule } from './me/me.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { SystemModule } from './system/system.module';
 import { TeamsModule } from './teams/teams.module';
 
 @Module({
@@ -18,6 +19,7 @@ import { TeamsModule } from './teams/teams.module';
     ContentModule,
     CampaignsModule,
     MeModule,
+    SystemModule,
   ],
   controllers: [AppController],
   providers: [AppService],

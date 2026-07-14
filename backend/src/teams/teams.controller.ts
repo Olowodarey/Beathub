@@ -103,6 +103,12 @@ export class TeamsController {
     });
   }
 
+  @Get('invoices')
+  @Roles('OWNER')
+  listInvoices(@Param('teamId') teamId: string) {
+    return this.teams.listInvoices(teamId);
+  }
+
   @Post('campaigns')
   @Roles()
   createCampaign(

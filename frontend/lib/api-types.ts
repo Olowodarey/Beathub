@@ -6,12 +6,14 @@ import type {
   Campaign,
   ContentItem,
   Invitation,
+  Invoice,
   Membership,
   PlatformShare,
   RegionShare,
   RevenuePoint,
   Role,
   SubscriptionShare,
+  SystemGauge,
   Team,
   User,
   UserGrowthPoint,
@@ -64,4 +66,8 @@ export interface InvitationLookupResponse {
   };
 }
 
-export type { Campaign, ContentItem, Invitation, Membership, Team, User };
+export interface SystemHealthResponse {
+  gauges: SystemGauge[];
+}
+
+export type { Campaign, ContentItem, Invitation, Invoice, Membership, Team, User };

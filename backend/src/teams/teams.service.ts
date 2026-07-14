@@ -43,6 +43,12 @@ export class TeamsService {
     return items.map(mapCampaign);
   }
 
+  // No billing provider is wired yet, so there are no invoices to return.
+  // Once Stripe/Paddle is integrated, list them here (scoped to teamId).
+  async listInvoices(_teamId: string) {
+    return [];
+  }
+
   async createCampaign(
     teamId: string,
     requesterId: string,
