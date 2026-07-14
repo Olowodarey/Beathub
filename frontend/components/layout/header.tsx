@@ -17,7 +17,6 @@ import {
   CommandPalette,
   useCommandPalette,
 } from "@/components/layout/command-palette";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { useCurrentUser } from "@/lib/current-user";
 
 const roleLabel = (role: string, personaType: string | null) => {
@@ -57,7 +56,6 @@ export function Header() {
             <span className="text-[11px]">⌘</span>K
           </kbd>
         </button>
-        <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger
             render={

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 import {
   CommandDialog,
   CommandEmpty,
@@ -11,7 +9,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
 import { useCurrentUser } from "@/lib/current-user";
 import { canSee, navItems } from "@/lib/nav";
@@ -24,7 +21,6 @@ export function CommandPalette({
   onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
-  const { setTheme } = useTheme();
   const { currentUser } = useCurrentUser();
 
   const navigable = currentUser
@@ -63,23 +59,6 @@ export function CommandPalette({
               Go to {item.label}
             </CommandItem>
           ))}
-        </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="Theme">
-          <CommandItem
-            value="Switch to light mode"
-            onSelect={() => runAndClose(() => setTheme("light"))}
-          >
-            <Sun className="mr-2 h-4 w-4" aria-hidden />
-            Switch to light mode
-          </CommandItem>
-          <CommandItem
-            value="Switch to dark mode"
-            onSelect={() => runAndClose(() => setTheme("dark"))}
-          >
-            <Moon className="mr-2 h-4 w-4" aria-hidden />
-            Switch to dark mode
-          </CommandItem>
         </CommandGroup>
       </CommandList>
     </CommandDialog>
