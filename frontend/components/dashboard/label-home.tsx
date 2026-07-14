@@ -69,7 +69,7 @@ export function LabelHome({ firstName }: { firstName: string }) {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
-      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-brand/25 via-brand/5 to-accent/25 p-6 sm:p-8">
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-brand/25 via-brand/5 to-accent/25 p-5 sm:p-8">
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-brand/30 blur-3xl"
           aria-hidden
@@ -82,23 +82,23 @@ export function LabelHome({ firstName }: { firstName: string }) {
           <p className="text-xs font-medium uppercase tracking-widest text-brand">
             Your label
           </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-4xl">
             Welcome, {firstName}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground sm:text-base">
             Sign artists, watch their plays add up, share earnings with your roster.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Link
               href="/dashboard/roster"
-              className="inline-flex h-9 items-center rounded-md bg-brand px-4 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand/90"
+              className="inline-flex h-9 w-full items-center justify-center rounded-md bg-brand px-4 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand/90 sm:w-auto sm:justify-start"
             >
               <UserPlus className="mr-2 h-4 w-4" />
               Manage roster
             </Link>
             <Link
               href="/dashboard/library"
-              className="inline-flex h-9 items-center rounded-md border bg-background px-4 text-sm font-medium hover:bg-muted"
+              className="inline-flex h-9 w-full items-center justify-center rounded-md border bg-background px-4 text-sm font-medium hover:bg-muted sm:w-auto sm:justify-start"
             >
               <Music2 className="mr-2 h-4 w-4" />
               Browse library
@@ -113,7 +113,7 @@ export function LabelHome({ firstName }: { firstName: string }) {
         </p>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatTile
           label="Signed artists"
           value={
@@ -146,7 +146,7 @@ export function LabelHome({ firstName }: { firstName: string }) {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardHeader className="flex flex-col gap-2 pb-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle className="text-base">Top artists</CardTitle>
               <p className="text-sm text-muted-foreground">
@@ -179,7 +179,7 @@ export function LabelHome({ firstName }: { firstName: string }) {
                     className="flex items-center justify-between gap-3 rounded-md border p-3"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium tabular-nums text-muted-foreground">
+                      <div className="hidden h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium tabular-nums text-muted-foreground sm:flex">
                         {i + 1}
                       </div>
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand/15 text-xs font-semibold text-brand">
@@ -187,7 +187,7 @@ export function LabelHome({ firstName }: { firstName: string }) {
                       </div>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{a.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">
+                        <p className="truncate text-[11px] text-muted-foreground sm:text-xs">
                           {a.approvedTrackCount}{" "}
                           {a.approvedTrackCount === 1 ? "track" : "tracks"} ·{" "}
                           {formatCompactNumber(a.totalPlays)} plays

@@ -72,7 +72,7 @@ export function CreatorHome({
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
-      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-brand/25 via-brand/5 to-accent/25 p-6 sm:p-8">
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-brand/25 via-brand/5 to-accent/25 p-5 sm:p-8">
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-brand/30 blur-3xl"
           aria-hidden
@@ -85,23 +85,23 @@ export function CreatorHome({
           <p className="text-xs font-medium uppercase tracking-widest text-brand">
             Your studio
           </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-4xl">
             Welcome back, {firstName}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground sm:text-base">
             Track how your catalog is doing and see what&apos;s earning.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Link
               href="/dashboard/content"
-              className="inline-flex h-9 items-center rounded-md bg-brand px-4 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand/90"
+              className="inline-flex h-9 w-full items-center justify-center rounded-md bg-brand px-4 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand/90 sm:w-auto sm:justify-start"
             >
               <Upload className="mr-2 h-4 w-4" />
               Upload a track
             </Link>
             <Link
               href="/dashboard/library"
-              className="inline-flex h-9 items-center rounded-md border bg-background px-4 text-sm font-medium hover:bg-muted"
+              className="inline-flex h-9 w-full items-center justify-center rounded-md border bg-background px-4 text-sm font-medium hover:bg-muted sm:w-auto sm:justify-start"
             >
               <Music2 className="mr-2 h-4 w-4" />
               Browse library
@@ -118,7 +118,7 @@ export function CreatorHome({
         </p>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatTile
           label="Plays"
           value={
@@ -150,7 +150,7 @@ export function CreatorHome({
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <CardHeader className="flex flex-col gap-2 pb-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="text-base">Your top tracks</CardTitle>
             <p className="text-sm text-muted-foreground">
@@ -174,44 +174,46 @@ export function CreatorHome({
               your first.
             </p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px]">#</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead className="w-[20%]">Genre</TableHead>
-                  <TableHead className="w-[15%]">Status</TableHead>
-                  <TableHead className="w-[10%] text-right">Plays</TableHead>
-                  <TableHead className="w-[12%] text-right">Earnings</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {topTracks.map((track, i) => (
-                  <TableRow key={track.id}>
-                    <TableCell className="text-sm tabular-nums text-muted-foreground">
-                      {i + 1}
-                    </TableCell>
-                    <TableCell className="text-sm font-medium">
-                      {track.title}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {track.genre}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={track.status} />
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {track.playCount.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums text-brand">
-                      {formatCurrency(
-                        Math.round(track.playCount * RATE_PER_PLAY * 100) / 100,
-                      )}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="hidden w-[40px] sm:table-cell">#</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead className="hidden w-[20%] sm:table-cell">Genre</TableHead>
+                    <TableHead className="w-[15%]">Status</TableHead>
+                    <TableHead className="hidden w-[10%] text-right sm:table-cell">Plays</TableHead>
+                    <TableHead className="w-[12%] text-right">Earnings</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {topTracks.map((track, i) => (
+                    <TableRow key={track.id}>
+                      <TableCell className="hidden text-sm tabular-nums text-muted-foreground sm:table-cell">
+                        {i + 1}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {track.title}
+                      </TableCell>
+                      <TableCell className="hidden text-sm text-muted-foreground sm:table-cell">
+                        {track.genre}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={track.status} />
+                      </TableCell>
+                      <TableCell className="hidden text-right text-sm tabular-nums sm:table-cell">
+                        {track.playCount.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums text-brand">
+                        {formatCurrency(
+                          Math.round(track.playCount * RATE_PER_PLAY * 100) / 100,
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

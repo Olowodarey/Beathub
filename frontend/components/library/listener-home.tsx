@@ -43,7 +43,7 @@ export function ListenerHome({
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
-      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-brand/25 via-brand/5 to-accent/25 p-6 sm:p-8">
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-brand/25 via-brand/5 to-accent/25 p-5 sm:p-8">
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-brand/25 blur-3xl"
           aria-hidden
@@ -56,7 +56,7 @@ export function ListenerHome({
           <p className="text-xs font-medium uppercase tracking-widest text-brand">
             Now playing on Beathub
           </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-4xl">
             Good to see you, {firstName}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground sm:text-base">
@@ -128,7 +128,7 @@ function Section({
       {tracks.length === 0 ? (
         <p className="text-sm text-muted-foreground">{emptyLabel}</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
           {tracks.map((track, i) => (
             <TrackCard
               key={track.id}

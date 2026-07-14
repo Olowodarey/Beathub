@@ -14,7 +14,9 @@ export default function DashboardLayout({
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <Header />
-          <main className="flex-1 px-4 py-6 md:px-6 md:py-8">{children}</main>
+          <main className="flex-1 px-4 pt-6 pb-24 md:px-6 md:pt-8 md:pb-8">
+            {children}
+          </main>
           <PlayerBar />
         </div>
       </div>

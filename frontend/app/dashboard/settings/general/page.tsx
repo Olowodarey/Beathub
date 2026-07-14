@@ -90,19 +90,21 @@ function ProfileCard({
         </p>
       </CardHeader>
       <CardContent>
-        <div className="flex items-start gap-4">
-          <Avatar className="h-14 w-14">
-            {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
-            <AvatarFallback className="bg-brand/15 text-sm font-semibold text-brand">
-              {initials(name || email)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1 space-y-1">
-            <p className="text-sm font-semibold">{name || email}</p>
-            <p className="text-xs text-muted-foreground">{email}</p>
-            <p className="text-xs text-muted-foreground">
-              Role: <span className="font-medium text-foreground">{role}</span>
-            </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+          <div className="flex items-start gap-4">
+            <Avatar className="h-14 w-14 shrink-0">
+              {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
+              <AvatarFallback className="bg-brand/15 text-sm font-semibold text-brand">
+                {initials(name || email)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="truncate text-sm font-semibold">{name || email}</p>
+              <p className="truncate text-xs text-muted-foreground">{email}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                Role: <span className="font-medium text-foreground">{role}</span>
+              </p>
+            </div>
           </div>
           <ManageAccountButton />
         </div>
@@ -117,7 +119,7 @@ function ManageAccountButton() {
     <Button
       variant="outline"
       size="sm"
-      className="shrink-0"
+      className="w-full shrink-0 sm:w-auto"
       onClick={() => openUserProfile()}
     >
       <UserIcon className="mr-2 h-4 w-4" />

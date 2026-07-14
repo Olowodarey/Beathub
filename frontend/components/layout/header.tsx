@@ -17,6 +17,7 @@ import {
   CommandPalette,
   useCommandPalette,
 } from "@/components/layout/command-palette";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { useCurrentUser } from "@/lib/current-user";
 
 const roleLabel = (role: string, personaType: string | null) => {
@@ -44,14 +45,18 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:gap-3 sm:px-4">
+        <MobileNav />
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex h-9 flex-1 items-center gap-2 rounded-md border bg-muted/40 px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted"
+          aria-label="Search or run a command"
+          className="flex h-9 flex-1 items-center gap-2 rounded-md border bg-muted/40 px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted sm:max-w-md"
         >
-          <Search className="h-4 w-4" aria-hidden />
-          <span className="flex-1">Search or run a command…</span>
+          <Search className="h-4 w-4 shrink-0" aria-hidden />
+          <span className="hidden flex-1 truncate sm:inline">
+            Search or run a command…
+          </span>
           <kbd className="hidden items-center gap-0.5 rounded border bg-background px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex">
             <span className="text-[11px]">⌘</span>K
           </kbd>

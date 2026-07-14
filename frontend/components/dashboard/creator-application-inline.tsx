@@ -55,14 +55,14 @@ export function CreatorApplicationInline() {
   if (loading) return null;
 
   const wrapper =
-    "flex flex-col gap-3 rounded-md border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between";
+    "flex min-w-0 flex-col gap-3 rounded-md border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between";
 
   if (application?.status === "PENDING") {
     return (
       <div className={wrapper}>
-        <div className="flex items-start gap-2 text-sm">
-          <ShieldQuestion className="mt-0.5 h-4 w-4 text-brand" />
-          <div>
+        <div className="flex min-w-0 items-start gap-2 text-sm">
+          <ShieldQuestion className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+          <div className="min-w-0 break-words">
             <p className="font-medium">Creator application under review</p>
             <p className="text-xs text-muted-foreground">
               An admin will let you know soon.
@@ -76,9 +76,9 @@ export function CreatorApplicationInline() {
   if (application?.status === "APPROVED") {
     return (
       <div className={wrapper}>
-        <div className="flex items-start gap-2 text-sm">
-          <ShieldCheck className="mt-0.5 h-4 w-4 text-brand" />
-          <div>
+        <div className="flex min-w-0 items-start gap-2 text-sm">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+          <div className="min-w-0 break-words">
             <p className="font-medium">You&apos;re a creator</p>
             <p className="text-xs text-muted-foreground">
               Refresh and head to Content to upload your first track.
@@ -94,9 +94,9 @@ export function CreatorApplicationInline() {
   if (!expanded) {
     return (
       <div className={wrapper}>
-        <div className="flex items-start gap-2 text-sm">
-          <Music2 className="mt-0.5 h-4 w-4 text-brand" />
-          <div>
+        <div className="flex min-w-0 items-start gap-2 text-sm">
+          <Music2 className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+          <div className="min-w-0 break-words">
             <p className="font-medium">
               {rejected
                 ? "Previous creator application declined"
@@ -111,7 +111,12 @@ export function CreatorApplicationInline() {
             </p>
           </div>
         </div>
-        <Button size="sm" variant="outline" onClick={() => setExpanded(true)}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full shrink-0 sm:w-auto"
+          onClick={() => setExpanded(true)}
+        >
           {rejected ? "Re-apply" : "Apply to be a creator"}
         </Button>
       </div>

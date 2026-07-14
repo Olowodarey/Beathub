@@ -40,11 +40,11 @@ export function SettingsTabs() {
   );
 
   return (
-    <div className="border-b">
+    <div className="relative border-b">
       <nav
         role="tablist"
         aria-label="Settings sections"
-        className="flex gap-6 overflow-x-auto overflow-y-hidden"
+        className="flex gap-4 overflow-x-auto overflow-y-hidden px-1 -mx-1 sm:gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {visible.map((tab) => {
           const isActive =
@@ -67,6 +67,10 @@ export function SettingsTabs() {
           );
         })}
       </nav>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent sm:hidden"
+      />
     </div>
   );
 }

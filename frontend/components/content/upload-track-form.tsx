@@ -89,11 +89,27 @@ export function UploadTrackForm({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="audio">Audio file (MP3, WAV, FLAC, OGG — max 25 MB)</Label>
+            <label
+              htmlFor="audio"
+              className="flex w-full cursor-pointer items-center gap-3 rounded-md border border-dashed bg-muted/30 p-3 text-sm transition-colors hover:bg-muted/50"
+            >
+              <Upload className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              <span className="min-w-0 flex-1 truncate">
+                {file ? (
+                  <span className="font-medium">{file.name}</span>
+                ) : (
+                  <span className="text-muted-foreground">
+                    Tap to choose an audio file
+                  </span>
+                )}
+              </span>
+            </label>
             <Input
               ref={fileRef}
               id="audio"
               type="file"
               accept="audio/*"
+              className="sr-only"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               required
             />
@@ -101,6 +117,7 @@ export function UploadTrackForm({
           <div className="flex justify-end">
             <Button
               type="submit"
+              className="w-full sm:w-auto"
               disabled={pending || !file || !title.trim() || !genre.trim()}
             >
               <Upload className="mr-2 h-4 w-4" />
