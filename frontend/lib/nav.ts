@@ -3,6 +3,7 @@ import {
   BarChart3,
   Headphones,
   LayoutDashboard,
+  ListMusic,
   Megaphone,
   Music2,
   Settings,
@@ -50,6 +51,11 @@ export const navItems: NavItem[] = [
     label: "Library",
     href: "/dashboard/library",
     icon: Headphones,
+  },
+  {
+    label: "Playlists",
+    href: "/dashboard/playlists",
+    icon: ListMusic,
   },
   {
     label: "Analytics",

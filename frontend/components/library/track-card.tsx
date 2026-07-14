@@ -1,6 +1,7 @@
 "use client";
 
 import { Music2 } from "lucide-react";
+import { AddToPlaylistButton } from "@/components/library/add-to-playlist-button";
 import { AudioPlayer } from "@/components/library/audio-player";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ContentItem } from "@/types";
@@ -36,11 +37,14 @@ export function TrackCard({
         </span>
       </div>
       <CardContent className="space-y-3 p-4">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{track.title}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {track.uploaderName} · {track.playCount.toLocaleString()} plays
-          </p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">{track.title}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {track.uploaderName} · {track.playCount.toLocaleString()} plays
+            </p>
+          </div>
+          <AddToPlaylistButton contentId={track.id} />
         </div>
         <AudioPlayer track={track} onPlayed={onPlayed} />
       </CardContent>

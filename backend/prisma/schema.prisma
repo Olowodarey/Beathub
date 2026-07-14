@@ -81,6 +81,9 @@ model User {
   invitationsSent      Invitation[]         @relation("InvitationInviter")
   creatorApplications  CreatorApplication[] @relation("CreatorApplicant")
   creatorAppsReviewed  CreatorApplication[] @relation("CreatorApplicationReviewer")
+  playlistsOwned       Playlist[]           @relation("PlaylistOwner")
+  playlistMemberships  PlaylistMember[]     @relation("PlaylistMember")
+  playlistTracksAdded  PlaylistTrack[]      @relation("PlaylistTrackAdder")
 }
 
 model Team {
@@ -147,11 +150,54 @@ model Content {
   playCount       Int           @default(0)
   createdAt       DateTime      @default(now())
 
-  team     Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  uploader User @relation("ContentUploader", fields: [uploaderId], references: [id])
+  team            Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  uploader        User            @relation("ContentUploader", fields: [uploaderId], references: [id])
+  playlistEntries PlaylistTrack[]
 
   @@index([teamId])
   @@index([status])
+}
+
+model Playlist {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String
+  createdAt DateTime @default(now())
+
+  owner   User             @relation("PlaylistOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  tracks  PlaylistTrack[]
+  members PlaylistMember[]
+
+  @@index([ownerId])
+}
+
+model PlaylistTrack {
+  id         String   @id @default(cuid())
+  playlistId String
+  contentId  String
+  addedById  String
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  content  Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  addedBy  User     @relation("PlaylistTrackAdder", fields: [addedById], references: [id])
+
+  @@unique([playlistId, contentId])
+  @@index([playlistId])
+}
+
+model PlaylistMember {
+  id         String   @id @default(cuid())
+  playlistId String
+  userId     String
+  addedAt    DateTime @default(now())
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  user     User     @relation("PlaylistMember", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, userId])
+  @@index([userId])
 }
 
 model CreatorApplication {

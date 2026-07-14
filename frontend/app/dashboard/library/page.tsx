@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Headphones } from "lucide-react";
+import { AddToPlaylistButton } from "@/components/library/add-to-playlist-button";
 import { AudioPlayer } from "@/components/library/audio-player";
 import { EmptyState } from "@/components/empty-state";
 import { Card } from "@/components/ui/card";
@@ -76,6 +77,7 @@ export default function LibraryPage() {
                 <TableHead className="w-[10%]">Genre</TableHead>
                 <TableHead className="w-[10%] text-right">Plays</TableHead>
                 <TableHead>Preview</TableHead>
+                <TableHead className="w-[60px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -95,6 +97,9 @@ export default function LibraryPage() {
                   </TableCell>
                   <TableCell>
                     <AudioPlayer track={track} onPlayed={handlePlayed} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <AddToPlaylistButton contentId={track.id} />
                   </TableCell>
                 </TableRow>
               ))}

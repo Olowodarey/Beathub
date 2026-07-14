@@ -4,6 +4,8 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthedRequest } from '../auth/request-user.type';
 import { CreatorApplicationsService } from '../creator-applications/creator-applications.service';
 import { SubmitApplicationDto } from '../creator-applications/dto/submit-application.dto';
+import { CreatePlaylistDto } from '../playlists/dto/create-playlist.dto';
+import { PlaylistsService } from '../playlists/playlists.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { mapMembership, mapTeam, mapUser } from '../common/mappers';
 
@@ -15,6 +17,7 @@ export class MeController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly creatorApplications: CreatorApplicationsService,
+    private readonly playlists: PlaylistsService,
   ) {}
 
   @Get()
@@ -40,5 +43,18 @@ export class MeController {
     @Body() dto: SubmitApplicationDto,
   ) {
     return this.creatorApplications.submit(authUser.user.id, dto.message);
+  }
+
+  @Get('playlists')
+  listPlaylists(@CurrentUser() authUser: Authed) {
+    return this.playlists.listMine(authUser.user.id);
+  }
+
+  @Post('playlists')
+  createPlaylist(
+    @CurrentUser() authUser: Authed,
+    @Body() dto: CreatePlaylistDto,
+  ) {
+    return this.playlists.create(authUser.user.id, dto.name);
   }
 }

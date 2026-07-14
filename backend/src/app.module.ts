@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { ContentModule } from './content/content.module';
 import { CreatorApplicationsModule } from './creator-applications/creator-applications.module';
+import { PlaylistsModule } from './playlists/playlists.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { MeModule } from './me/me.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -22,6 +23,7 @@ import { TeamsModule } from './teams/teams.module';
     MeModule,
     SystemModule,
     CreatorApplicationsModule,
+    PlaylistsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

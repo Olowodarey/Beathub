@@ -27,6 +27,45 @@ export interface CreatorApplicationRow extends CreatorApplication {
   reviewerName: string | null;
 }
 
+export interface PlaylistSummary {
+  id: string;
+  name: string;
+  ownerId: string;
+  ownerName: string;
+  role: "owner" | "member";
+  trackCount: number;
+  memberCount: number;
+  createdAt: string;
+}
+
+export interface PlaylistTrackEntry {
+  entryId: string;
+  position: number;
+  addedAt: string;
+  addedByName: string;
+  track: ContentItem;
+}
+
+export interface PlaylistMember {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  addedAt: string;
+}
+
+export interface PlaylistDetail {
+  id: string;
+  name: string;
+  ownerId: string;
+  ownerName: string;
+  ownerEmail: string;
+  viewerRole: "owner" | "member";
+  createdAt: string;
+  tracks: PlaylistTrackEntry[];
+  members: PlaylistMember[];
+}
+
 export type UserStatus = "ACTIVE" | "INVITED" | "SUSPENDED";
 
 export interface User {
