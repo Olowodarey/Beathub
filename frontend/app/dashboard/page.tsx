@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { DollarSign, Music2, Sparkles, Users } from "lucide-react";
 import { RevenueBarChart } from "@/components/charts/revenue-bar-chart";
 import { PlatformDonut } from "@/components/charts/platform-donut";
@@ -9,14 +10,60 @@ import { QuickActions } from "@/components/dashboard/quick-actions";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { RoleGate } from "@/components/role-gate";
+import { useApiClient } from "@/lib/api-client";
 import { useCurrentUser } from "@/lib/current-user";
 import { formatCompactNumber, formatCurrency } from "@/lib/format";
-import { overviewStats } from "@/lib/mock-data";
+import type {
+  AnalyticsResponse,
+  DashboardResponse,
+} from "@/lib/api-types";
 
 export default function DashboardOverview() {
-  const { currentUser } = useCurrentUser();
+  const { currentUser, activeTeamId, loading: userLoading, error: userError } =
+    useCurrentUser();
+  const api = useApiClient();
+
+  const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!activeTeamId) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      api.get<DashboardResponse>(`/teams/${activeTeamId}/dashboard`),
+      api.get<AnalyticsResponse>(`/teams/${activeTeamId}/analytics`),
+    ])
+      .then(([d, a]) => {
+        if (cancelled) return;
+        setDashboard(d);
+        setAnalytics(a);
+      })
+      .catch((e) => !cancelled && setError(e as Error))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTeamId, api]);
+
+  if (userLoading || (!currentUser && !userError)) {
+    return <PageMessage>Loading…</PageMessage>;
+  }
+  if (userError || !currentUser) {
+    return (
+      <PageMessage tone="error">
+        Couldn&apos;t load your account. Try refreshing.
+      </PageMessage>
+    );
+  }
+
   const { role, personaType } = currentUser.membership;
   const isCreator = role === "MEMBER" && personaType === "CREATOR";
+  const firstName = currentUser.user.name.split(" ")[0];
+  const stats = dashboard?.stats;
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">
@@ -26,62 +73,65 @@ export default function DashboardOverview() {
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {isCreator
-            ? `Welcome back, ${currentUser.user.name.split(" ")[0]}. Here's how your catalog is doing.`
-            : `Welcome back, ${currentUser.user.name.split(" ")[0]}. Here's what's happening across ${currentUser.team.name}.`}
+            ? `Welcome back, ${firstName}. Here's how your catalog is doing.`
+            : `Welcome back, ${firstName}. Here's what's happening across ${currentUser.team.name}.`}
         </p>
       </div>
+
+      {error ? (
+        <PageMessage tone="error">
+          Couldn&apos;t load dashboard data. {error.message}
+        </PageMessage>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {isCreator ? (
           <>
             <StatCard
               label="Streams (30d)"
-              value={formatCompactNumber(214_820)}
+              value="—"
               icon={Sparkles}
-              trend={{ value: "+12.4% vs last 30d", direction: "up" }}
+              hint="Per-creator stats coming soon"
             />
-            <StatCard
-              label="Followers"
-              value={formatCompactNumber(8_412)}
-              icon={Users}
-              trend={{ value: "+186 this month", direction: "up" }}
-            />
-            <StatCard
-              label="Revenue share"
-              value={formatCurrency(1_842)}
-              icon={DollarSign}
-              hint="Payable on the 1st"
-            />
-            <StatCard
-              label="Uploads"
-              value="14"
-              icon={Music2}
-              hint="3 pending review"
-            />
+            <StatCard label="Followers" value="—" icon={Users} />
+            <StatCard label="Revenue share" value="—" icon={DollarSign} />
+            <StatCard label="Uploads" value="—" icon={Music2} />
           </>
         ) : (
           <>
             <StatCard
               label="Total users"
-              value={formatCompactNumber(overviewStats.totalUsers)}
+              value={loading || !stats ? "—" : formatCompactNumber(stats.totalUsers)}
               icon={Users}
-              trend={{ value: "+3.8% MoM", direction: "up" }}
             />
             <StatCard
               label="Active creators"
-              value={formatCompactNumber(overviewStats.activeCreators)}
+              value={
+                loading || !stats
+                  ? "—"
+                  : formatCompactNumber(stats.activeCreators)
+              }
               icon={Sparkles}
-              hint={`${formatCompactNumber(overviewStats.totalCreators)} total`}
+              hint={
+                stats
+                  ? `${formatCompactNumber(stats.totalCreators)} total`
+                  : undefined
+              }
             />
             <StatCard
               label="Total revenue"
-              value={formatCurrency(overviewStats.totalRevenueUsd)}
+              value={
+                loading || !stats ? "—" : formatCurrency(stats.totalRevenueUsd)
+              }
               icon={DollarSign}
-              trend={{ value: "+8.1% MoM", direction: "up" }}
             />
             <StatCard
               label="Content uploads"
-              value={formatCompactNumber(overviewStats.contentUploadsThisWeek)}
+              value={
+                loading || !stats
+                  ? "—"
+                  : formatCompactNumber(stats.contentUploadsThisWeek)
+              }
               icon={Music2}
               hint="This week"
             />
@@ -90,23 +140,46 @@ export default function DashboardOverview() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <UserGrowthChart />
-        <RevenueBarChart />
+        <UserGrowthChart data={analytics?.userGrowthSeries ?? []} />
+        <RevenueBarChart data={analytics?.revenueSeries ?? []} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <PlatformDonut />
+          <PlatformDonut data={analytics?.platformShare ?? []} />
         </div>
         <div className="flex flex-col gap-4">
           <RoleGate allow={["OWNER"]}>
-            <AdRevenueWidget />
+            <AdRevenueWidget
+              adRevenueUsd={stats?.adRevenueUsd ?? 0}
+              adRevenueTrendPct={stats?.adRevenueTrendPct ?? 0}
+            />
           </RoleGate>
-          <RecentActivity />
+          <RecentActivity items={dashboard?.recentActivity ?? []} />
         </div>
       </div>
 
       <QuickActions />
+    </div>
+  );
+}
+
+function PageMessage({
+  children,
+  tone = "info",
+}: {
+  children: React.ReactNode;
+  tone?: "info" | "error";
+}) {
+  return (
+    <div
+      className={`rounded-md border p-4 text-sm ${
+        tone === "error"
+          ? "border-destructive/40 bg-destructive/5 text-destructive"
+          : "border-border bg-muted/30 text-muted-foreground"
+      }`}
+    >
+      {children}
     </div>
   );
 }

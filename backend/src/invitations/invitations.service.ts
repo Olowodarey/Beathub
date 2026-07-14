@@ -27,6 +27,27 @@ export class InvitationsService {
     return invitations.map(mapInvitation);
   }
 
+  async lookup(token: string) {
+    const inv = await this.prisma.invitation.findUnique({
+      where: { token },
+      include: { team: true },
+    });
+    if (!inv) throw new NotFoundException('Invitation not found');
+    return {
+      email: inv.email,
+      role: inv.role,
+      personaType: inv.personaType,
+      status: inv.status,
+      expiresAt: inv.expiresAt.toISOString(),
+      team: {
+        id: inv.team.id,
+        name: inv.team.name,
+        slug: inv.team.slug,
+        logoUrl: inv.team.logoUrl,
+      },
+    };
+  }
+
   async create(
     teamId: string,
     invitedById: string,

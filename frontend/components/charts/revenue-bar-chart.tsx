@@ -11,10 +11,10 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { revenueSeries } from "@/lib/mock-data";
 import { formatCompactNumber, formatCurrency } from "@/lib/format";
+import type { RevenuePoint } from "@/types";
 
-export function RevenueBarChart() {
+export function RevenueBarChart({ data }: { data: RevenuePoint[] }) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -29,7 +29,7 @@ export function RevenueBarChart() {
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={revenueSeries}
+              data={data}
               margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
               barCategoryGap={16}
             >

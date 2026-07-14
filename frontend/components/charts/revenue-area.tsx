@@ -11,10 +11,10 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { revenueSeries } from "@/lib/mock-data";
 import { formatCompactNumber, formatCurrency } from "@/lib/format";
+import type { RevenuePoint } from "@/types";
 
-export function RevenueArea() {
+export function RevenueArea({ data }: { data: RevenuePoint[] }) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -29,7 +29,7 @@ export function RevenueArea() {
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={revenueSeries.map((point) => ({
+              data={data.map((point) => ({
                 month: point.month,
                 total: point.subscriptions + point.ads,
               }))}

@@ -1,22 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { mockTeam } from "@/lib/mock-data";
+import { useCurrentUser } from "@/lib/current-user";
 
 export default function SettingsGeneralPage() {
-  const [name, setName] = useState(mockTeam.name);
-  const [slug, setSlug] = useState(mockTeam.slug);
+  const { currentUser } = useCurrentUser();
+  const team = currentUser?.team;
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+
+  useEffect(() => {
+    if (team) {
+      setName(team.name);
+      setSlug(team.slug);
+    }
+  }, [team]);
 
   const save = (event: React.FormEvent) => {
     event.preventDefault();
-    toast.success("Workspace settings saved");
+    toast.info("Team edit endpoint isn't wired yet.");
   };
+
+  if (!team) {
+    return (
+      <p className="text-sm text-muted-foreground">Loading team…</p>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -76,7 +91,8 @@ export default function SettingsGeneralPage() {
                 variant="outline"
                 onClick={() =>
                   toast.info("Logo upload isn't wired up yet.", {
-                    description: "This will accept SVG / PNG once the backend lands.",
+                    description:
+                      "This will accept SVG / PNG once the endpoint lands.",
                   })
                 }
               >

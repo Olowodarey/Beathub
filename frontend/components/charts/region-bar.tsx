@@ -10,10 +10,10 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { regionShare } from "@/lib/mock-data";
 import { formatCompactNumber, formatNumber } from "@/lib/format";
+import type { RegionShare } from "@/types";
 
-export function RegionBar() {
+export function RegionBar({ data }: { data: RegionShare[] }) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -27,7 +27,7 @@ export function RegionBar() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
-              data={regionShare}
+              data={data}
               margin={{ top: 4, right: 16, left: 12, bottom: 4 }}
             >
               <CartesianGrid

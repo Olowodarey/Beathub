@@ -1,10 +1,8 @@
 "use client";
 
 import { LogOut, Search } from "lucide-react";
-import {
-  Avatar,
-  AvatarFallback,
-} from "@/components/ui/avatar";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,7 +17,6 @@ import {
   CommandPalette,
   useCommandPalette,
 } from "@/components/layout/command-palette";
-import { RoleSwitcher } from "@/components/layout/role-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { useCurrentUser } from "@/lib/current-user";
 
@@ -40,7 +37,8 @@ const initials = (name: string) =>
 export function Header() {
   const { open, setOpen } = useCommandPalette();
   const { currentUser } = useCurrentUser();
-  const { user, membership } = currentUser;
+  const { user: clerkUser } = useUser();
+  const { signOut } = useClerk();
 
   return (
     <>
@@ -56,7 +54,6 @@ export function Header() {
             <span className="text-[11px]">⌘</span>K
           </kbd>
         </button>
-        <RoleSwitcher />
         <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -70,26 +67,38 @@ export function Header() {
             }
           >
             <Avatar className="h-8 w-8">
+              {clerkUser?.imageUrl ? (
+                <AvatarImage src={clerkUser.imageUrl} alt="" />
+              ) : null}
               <AvatarFallback className="bg-brand/10 text-xs font-medium text-brand">
-                {initials(user.name)}
+                {initials(currentUser?.user.name ?? clerkUser?.firstName ?? "?")}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuGroup>
               <DropdownMenuLabel className="flex flex-col">
-                <span className="text-sm">{user.name}</span>
+                <span className="text-sm">
+                  {currentUser?.user.name ?? clerkUser?.fullName ?? "…"}
+                </span>
                 <span className="text-xs font-normal text-muted-foreground">
-                  {user.email}
+                  {currentUser?.user.email ??
+                    clerkUser?.primaryEmailAddress?.emailAddress ??
+                    ""}
                 </span>
-                <span className="mt-1 text-xs font-normal text-muted-foreground">
-                  {roleLabel(membership.role, membership.personaType)} ·{" "}
-                  {currentUser.team.name}
-                </span>
+                {currentUser ? (
+                  <span className="mt-1 text-xs font-normal text-muted-foreground">
+                    {roleLabel(
+                      currentUser.membership.role,
+                      currentUser.membership.personaType,
+                    )}{" "}
+                    · {currentUser.team.name}
+                  </span>
+                ) : null}
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>
+            <DropdownMenuItem onSelect={() => void signOut({ redirectUrl: "/login" })}>
               <LogOut className="mr-2 h-4 w-4" aria-hidden />
               Sign out
             </DropdownMenuItem>

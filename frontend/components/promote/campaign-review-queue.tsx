@@ -32,7 +32,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
-import { campaigns as seedCampaigns } from "@/lib/mock-data";
 import { formatCurrency, formatDateRange } from "@/lib/format";
 import type { Campaign, CampaignStatus } from "@/types";
 
@@ -44,29 +43,44 @@ const slotLabel: Record<Campaign["slotType"], string> = {
 
 type StatusFilter = "ALL" | CampaignStatus;
 
-export function CampaignReviewQueue() {
-  const [items, setItems] = useState<Campaign[]>(seedCampaigns);
+export function CampaignReviewQueue({
+  campaigns,
+  onDecide,
+}: {
+  campaigns: Campaign[];
+  onDecide: (
+    id: string,
+    next: "APPROVED" | "REJECTED",
+    note: string | null,
+  ) => Promise<void>;
+}) {
   const [filter, setFilter] = useState<StatusFilter>("PENDING");
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const filtered = useMemo(
     () =>
-      filter === "ALL" ? items : items.filter((item) => item.status === filter),
-    [filter, items],
+      filter === "ALL"
+        ? campaigns
+        : campaigns.filter((item) => item.status === filter),
+    [filter, campaigns],
   );
 
-  const decide = (
+  const decide = async (
     id: string,
     next: "APPROVED" | "REJECTED",
     note: string | null,
   ) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, status: next, reviewerNote: note }
-          : item,
-      ),
-    );
-    toast.success(next === "APPROVED" ? "Campaign approved" : "Campaign rejected");
+    setBusyId(id);
+    try {
+      await onDecide(id, next, note);
+      toast.success(
+        next === "APPROVED" ? "Campaign approved" : "Campaign rejected",
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update");
+    } finally {
+      setBusyId(null);
+    }
   };
 
   return (
@@ -138,6 +152,7 @@ export function CampaignReviewQueue() {
                         <ReviewControls
                           campaign={campaign}
                           onDecide={decide}
+                          disabled={busyId === campaign.id}
                         />
                       ) : (
                         <span className="text-xs text-muted-foreground">
@@ -159,6 +174,7 @@ export function CampaignReviewQueue() {
 function ReviewControls({
   campaign,
   onDecide,
+  disabled,
 }: {
   campaign: Campaign;
   onDecide: (
@@ -166,6 +182,7 @@ function ReviewControls({
     next: "APPROVED" | "REJECTED",
     note: string | null,
   ) => void;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState("");
@@ -190,11 +207,16 @@ function ReviewControls({
         <Button
           size="sm"
           variant="outline"
+          disabled={disabled}
           onClick={() => startDecision("REJECTED")}
         >
           Reject
         </Button>
-        <Button size="sm" onClick={() => startDecision("APPROVED")}>
+        <Button
+          size="sm"
+          disabled={disabled}
+          onClick={() => startDecision("APPROVED")}
+        >
           Approve
         </Button>
       </div>

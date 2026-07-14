@@ -9,9 +9,16 @@ import { cn } from "@/lib/utils";
 export function Sidebar() {
   const pathname = usePathname();
   const { currentUser } = useCurrentUser();
-  const { role, personaType } = currentUser.membership;
 
-  const visible = navItems.filter((item) => canSee(item, role, personaType));
+  const visible = currentUser
+    ? navItems.filter((item) =>
+        canSee(
+          item,
+          currentUser.membership.role,
+          currentUser.membership.personaType,
+        ),
+      )
+    : [];
 
   return (
     <aside className="sticky top-0 hidden h-svh w-16 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex lg:w-56">
@@ -53,12 +60,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="hidden border-t p-3 text-xs text-muted-foreground lg:block">
-        <div className="rounded-md bg-muted/60 p-2">
-          <p className="font-medium text-foreground">Frontend preview</p>
-          <p className="mt-0.5">Mock data — real backend wires up next.</p>
-        </div>
-      </div>
     </aside>
   );
 }

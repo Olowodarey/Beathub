@@ -1,35 +1,61 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { CheckCircle2, Clock3, UserPlus } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
-import { mockInvitation, mockTeam } from "@/lib/mock-data";
+import { ApiError, publicGet, useApiClient } from "@/lib/api-client";
+import { useCurrentUser } from "@/lib/current-user";
 import { formatDate } from "@/lib/format";
+import type { InvitationLookupResponse } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
 
-// Next.js 16: params + searchParams are Promises and must be awaited.
-type InviteState = "pending" | "expired" | "already-member";
+type ViewState =
+  | "loading"
+  | "pending"
+  | "expired"
+  | "revoked"
+  | "accepted"
+  | "not-found"
+  | "error";
 
-const isState = (v: unknown): v is InviteState =>
-  v === "pending" || v === "expired" || v === "already-member";
+export default function InvitePage() {
+  const params = useParams<{ token: string }>();
+  const token = params?.token;
+  const [invite, setInvite] = useState<InvitationLookupResponse | null>(null);
+  const [state, setState] = useState<ViewState>("loading");
+  const [error, setError] = useState<string | null>(null);
 
-export default async function InvitePage(props: {
-  params: Promise<{ token: string }>;
-  searchParams: Promise<{ state?: string | string[] }>;
-}) {
-  const { token } = await props.params;
-  const searchParams = await props.searchParams;
-  const raw = Array.isArray(searchParams.state)
-    ? searchParams.state[0]
-    : searchParams.state;
-  const state: InviteState = isState(raw) ? raw : "pending";
-
-  const invite = mockInvitation;
-  const roleLabel = invite.role === "MEMBER"
-    ? invite.personaType === "LABEL_REP"
-      ? "Label Representative"
-      : "Creator"
-    : invite.role.charAt(0) + invite.role.slice(1).toLowerCase();
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    publicGet<InvitationLookupResponse>(`/invitations/${token}`)
+      .then((data) => {
+        if (cancelled) return;
+        setInvite(data);
+        const isExpired = new Date(data.expiresAt) < new Date();
+        if (data.status === "REVOKED") setState("revoked");
+        else if (data.status === "ACCEPTED") setState("accepted");
+        else if (data.status === "EXPIRED" || isExpired) setState("expired");
+        else setState("pending");
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        if (e instanceof ApiError && e.status === 404) {
+          setState("not-found");
+        } else {
+          setState("error");
+          setError(e instanceof Error ? e.message : "Something went wrong");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-muted/20 px-4 py-12">
@@ -40,62 +66,78 @@ export default async function InvitePage(props: {
           </div>
           <span className="text-lg font-semibold tracking-tight">Beathub</span>
         </div>
-
         <Card>
           <CardContent className="pt-6">
-            {state === "pending" ? (
-              <PendingInvite
-                teamName={mockTeam.name}
-                roleLabel={roleLabel}
-                expiresAt={invite.expiresAt}
-                token={token}
+            {state === "loading" ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Loading invitation…
+              </p>
+            ) : state === "not-found" ? (
+              <SimpleState
+                tone="error"
+                title="Invitation not found"
+                message="This invitation link doesn't exist or has been removed."
               />
             ) : state === "expired" ? (
-              <ExpiredInvite teamName={mockTeam.name} />
+              <ExpiredInvite teamName={invite!.team.name} />
+            ) : state === "revoked" ? (
+              <SimpleState
+                tone="error"
+                title="Invitation revoked"
+                message={`This invite to ${invite!.team.name} has been revoked.`}
+              />
+            ) : state === "accepted" ? (
+              <AlreadyMemberInvite teamName={invite!.team.name} />
+            ) : state === "error" ? (
+              <SimpleState
+                tone="error"
+                title="Couldn't load invitation"
+                message={error ?? "Try again in a moment."}
+              />
             ) : (
-              <AlreadyMemberInvite teamName={mockTeam.name} />
+              <PendingInvite invite={invite!} token={token!} />
             )}
           </CardContent>
         </Card>
-
-        {/* Preview links to toggle UI states while there's no real backend. */}
-        <div className="mt-6 flex items-center justify-center gap-2 text-xs">
-          <span className="text-muted-foreground">Preview states:</span>
-          <Link
-            className="rounded border bg-background px-2 py-1 hover:bg-muted"
-            href={`/invite/${token}`}
-          >
-            pending
-          </Link>
-          <Link
-            className="rounded border bg-background px-2 py-1 hover:bg-muted"
-            href={`/invite/${token}?state=expired`}
-          >
-            expired
-          </Link>
-          <Link
-            className="rounded border bg-background px-2 py-1 hover:bg-muted"
-            href={`/invite/${token}?state=already-member`}
-          >
-            already member
-          </Link>
-        </div>
       </div>
     </main>
   );
 }
 
 function PendingInvite({
-  teamName,
-  roleLabel,
-  expiresAt,
+  invite,
   token,
 }: {
-  teamName: string;
-  roleLabel: string;
-  expiresAt: string;
+  invite: InvitationLookupResponse;
   token: string;
 }) {
+  const { isLoaded, isSignedIn } = useAuth();
+  const api = useApiClient();
+  const { refresh } = useCurrentUser();
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const roleLabel =
+    invite.role === "MEMBER"
+      ? invite.personaType === "LABEL_REP"
+        ? "Label Representative"
+        : "Creator"
+      : invite.role.charAt(0) + invite.role.slice(1).toLowerCase();
+
+  const accept = async () => {
+    setPending(true);
+    setError(null);
+    try {
+      await api.post(`/invitations/${token}/accept`);
+      await refresh();
+      router.push("/dashboard");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to accept");
+      setPending(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col items-center text-center">
@@ -103,33 +145,51 @@ function PendingInvite({
           <UserPlus className="h-5 w-5" aria-hidden />
         </div>
         <h1 className="text-lg font-semibold tracking-tight">
-          You&apos;ve been invited to join {teamName}
+          You&apos;ve been invited to join {invite.team.name}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Role:{" "}
           <span className="font-medium text-foreground">{roleLabel}</span>
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Invitation expires {formatDate(expiresAt)}
+          Invitation expires {formatDate(invite.expiresAt)}
         </p>
       </div>
       <div className="space-y-2">
-        <Link
-          href="/dashboard"
-          className={cn(buttonVariants({ size: "lg" }), "w-full")}
-        >
-          Accept invitation
-        </Link>
+        {!isLoaded ? (
+          <Button size="lg" className="w-full" disabled>
+            Loading…
+          </Button>
+        ) : isSignedIn ? (
+          <Button
+            size="lg"
+            className="w-full"
+            onClick={accept}
+            disabled={pending}
+          >
+            {pending ? "Accepting…" : "Accept invitation"}
+          </Button>
+        ) : (
+          <Link
+            href={`/login?redirect=${encodeURIComponent(`/invite/${token}`)}`}
+            className={cn(buttonVariants({ size: "lg" }), "w-full")}
+          >
+            Sign in to accept
+          </Link>
+        )}
         <Link
           href="/login"
-          className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "w-full")}
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "lg" }),
+            "w-full",
+          )}
         >
           Not now
         </Link>
+        {error ? (
+          <p className="text-center text-xs text-destructive">{error}</p>
+        ) : null}
       </div>
-      <p className="text-center text-xs text-muted-foreground">
-        Invite token: <span className="font-mono">{token}</span>
-      </p>
     </div>
   );
 }
@@ -153,7 +213,10 @@ function ExpiredInvite({ teamName }: { teamName: string }) {
       </div>
       <Link
         href="/login"
-        className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
+        className={cn(
+          buttonVariants({ variant: "outline", size: "lg" }),
+          "w-full",
+        )}
       >
         Back to sign in
       </Link>
@@ -181,6 +244,39 @@ function AlreadyMemberInvite({ teamName }: { teamName: string }) {
         className={cn(buttonVariants({ size: "lg" }), "w-full")}
       >
         Go to dashboard
+      </Link>
+    </div>
+  );
+}
+
+function SimpleState({
+  title,
+  message,
+  tone = "info",
+}: {
+  title: string;
+  message: string;
+  tone?: "info" | "error";
+}) {
+  return (
+    <div className="space-y-4 py-4 text-center">
+      <h1
+        className={cn(
+          "text-lg font-semibold tracking-tight",
+          tone === "error" && "text-destructive",
+        )}
+      >
+        {title}
+      </h1>
+      <p className="text-sm text-muted-foreground">{message}</p>
+      <Link
+        href="/login"
+        className={cn(
+          buttonVariants({ variant: "outline", size: "lg" }),
+          "w-full",
+        )}
+      >
+        Back to sign in
       </Link>
     </div>
   );

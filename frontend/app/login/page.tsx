@@ -1,14 +1,33 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSignIn } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-// Role assignment happens via invitation token, not at sign-in — see
-// /invite/[token]. This page is UI only; wire real OAuth (Clerk) later.
 export default function LoginPage() {
-  const router = useRouter();
+  const { signIn, fetchStatus } = useSignIn();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleGoogle = async () => {
+    if (!signIn) return;
+    setError(null);
+    setPending(true);
+    const { error: ssoError } = await signIn.sso({
+      strategy: "oauth_google",
+      redirectUrl: "/dashboard",
+      redirectCallbackUrl: "/sso-callback",
+    });
+    if (ssoError) {
+      setPending(false);
+      setError(ssoError.message ?? "Sign-in failed");
+    }
+  };
+
+  const disabled = !signIn || pending || fetchStatus === "fetching";
+
   return (
     <main className="flex min-h-svh items-center justify-center bg-muted/20 px-4">
       <div className="w-full max-w-sm">
@@ -32,11 +51,15 @@ export default function LoginPage() {
               <Button
                 className="w-full"
                 variant="outline"
-                onClick={() => router.push("/dashboard")}
+                onClick={handleGoogle}
+                disabled={disabled}
               >
                 <GoogleGlyph />
-                Continue with Google
+                {pending ? "Redirecting…" : "Continue with Google"}
               </Button>
+              {error ? (
+                <p className="text-center text-xs text-destructive">{error}</p>
+              ) : null}
               <p className="text-center text-xs text-muted-foreground">
                 By continuing you agree to our terms and privacy policy.
               </p>

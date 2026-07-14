@@ -7,6 +7,7 @@ import { useCurrentUser } from "@/lib/current-user";
 
 export default function SettingsTeamPage() {
   const { currentUser } = useCurrentUser();
+  if (!currentUser) return null;
   const canInvite = currentUser.membership.role === "OWNER";
 
   return (

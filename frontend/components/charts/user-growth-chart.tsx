@@ -11,10 +11,10 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { userGrowthSeries } from "@/lib/mock-data";
 import { formatCompactNumber } from "@/lib/format";
+import type { UserGrowthPoint } from "@/types";
 
-export function UserGrowthChart() {
+export function UserGrowthChart({ data }: { data: UserGrowthPoint[] }) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -29,7 +29,7 @@ export function UserGrowthChart() {
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={userGrowthSeries}
+              data={data}
               margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
             >
               <defs>

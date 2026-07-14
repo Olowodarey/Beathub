@@ -11,6 +11,7 @@ import { formatCurrency } from "@/lib/format";
 // Owner only.
 export default function SettingsBillingPage() {
   const { currentUser } = useCurrentUser();
+  if (!currentUser) return null;
   const isOwner = currentUser.membership.role === "OWNER";
 
   if (!isOwner) {

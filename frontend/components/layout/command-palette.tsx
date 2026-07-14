@@ -15,14 +15,6 @@ import {
 } from "@/components/ui/command";
 import { useCurrentUser } from "@/lib/current-user";
 import { canSee, navItems } from "@/lib/nav";
-import type { CurrentUserKey } from "@/lib/mock-data";
-
-const ROLE_TARGETS: Array<{ key: CurrentUserKey; label: string }> = [
-  { key: "owner", label: "Owner" },
-  { key: "admin", label: "Admin" },
-  { key: "creator", label: "Creator" },
-  { key: "labelRep", label: "Label rep" },
-];
 
 export function CommandPalette({
   open,
@@ -33,12 +25,17 @@ export function CommandPalette({
 }) {
   const router = useRouter();
   const { setTheme } = useTheme();
-  const { currentUser, setActiveKey } = useCurrentUser();
-  const { role, personaType } = currentUser.membership;
+  const { currentUser } = useCurrentUser();
 
-  const navigable = navItems.filter((item) =>
-    canSee(item, role, personaType),
-  );
+  const navigable = currentUser
+    ? navItems.filter((item) =>
+        canSee(
+          item,
+          currentUser.membership.role,
+          currentUser.membership.personaType,
+        ),
+      )
+    : [];
 
   const runAndClose = (fn: () => void) => {
     fn();
@@ -83,18 +80,6 @@ export function CommandPalette({
             <Moon className="mr-2 h-4 w-4" aria-hidden />
             Switch to dark mode
           </CommandItem>
-        </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="Preview role (dev)">
-          {ROLE_TARGETS.map((target) => (
-            <CommandItem
-              key={target.key}
-              value={`Preview as ${target.label}`}
-              onSelect={() => runAndClose(() => setActiveKey(target.key))}
-            >
-              Preview as {target.label}
-            </CommandItem>
-          ))}
         </CommandGroup>
       </CommandList>
     </CommandDialog>

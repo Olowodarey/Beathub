@@ -14,7 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { AdSlotType } from "@/types";
+import { ApiError, useApiClient } from "@/lib/api-client";
+import { useCurrentUser } from "@/lib/current-user";
+import type { AdSlotType, Campaign } from "@/types";
 
 const slotOptions: { value: AdSlotType; label: string; blurb: string }[] = [
   {
@@ -34,23 +36,54 @@ const slotOptions: { value: AdSlotType; label: string; blurb: string }[] = [
   },
 ];
 
-export function CampaignRequestForm() {
+export function CampaignRequestForm({
+  onCreated,
+}: {
+  onCreated?: (campaign: Campaign) => void;
+}) {
+  const api = useApiClient();
+  const { activeTeamId } = useCurrentUser();
   const [slotType, setSlotType] = useState<AdSlotType>("HOMEPAGE_FEATURED");
   const [budget, setBudget] = useState("1000");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [pending, setPending] = useState(false);
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    toast.success("Campaign request submitted", {
-      description:
-        "It's now in the review queue. You'll get a notification when it's reviewed.",
-    });
-    setBudget("1000");
-    setStartDate("");
-    setEndDate("");
-    setNotes("");
+    if (!activeTeamId) return;
+    setPending(true);
+    try {
+      const created = await api.post<Campaign>(
+        `/teams/${activeTeamId}/campaigns`,
+        {
+          slotType,
+          budgetUsd: parseInt(budget, 10),
+          startDate: new Date(startDate).toISOString(),
+          endDate: new Date(endDate).toISOString(),
+        },
+      );
+      onCreated?.(created);
+      toast.success("Campaign request submitted", {
+        description:
+          "It's in the review queue. You'll be notified when it's reviewed.",
+      });
+      setBudget("1000");
+      setStartDate("");
+      setEndDate("");
+      setNotes("");
+    } catch (e) {
+      const msg =
+        e instanceof ApiError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Failed to submit";
+      toast.error(msg);
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -135,7 +168,9 @@ export function CampaignRequestForm() {
           </div>
 
           <div className="flex justify-end">
-            <Button type="submit">Submit request</Button>
+            <Button type="submit" disabled={pending || !activeTeamId}>
+              {pending ? "Submitting…" : "Submit request"}
+            </Button>
           </div>
         </form>
       </CardContent>

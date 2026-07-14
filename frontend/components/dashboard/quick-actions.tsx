@@ -52,6 +52,7 @@ const actions: QuickAction[] = [
 
 export function QuickActions() {
   const { currentUser } = useCurrentUser();
+  if (!currentUser) return null;
   const role = currentUser.membership.role;
   const visible = actions.filter(
     (action) => !action.roles || action.roles.includes(role),

@@ -23,13 +23,15 @@ import {
 import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
 import { UserDetailSheet } from "@/components/users/user-detail-sheet";
-import { directoryUsers } from "@/lib/mock-data";
 import { formatDate } from "@/lib/format";
 import type { Role, User } from "@/types";
 import type { Membership } from "@/types";
 import { cn } from "@/lib/utils";
 
-type DirectoryEntry = (typeof directoryUsers)[number];
+export type DirectoryEntry = User & {
+  role: Role;
+  personaType: Membership["personaType"];
+};
 
 type RoleFilter = "ALL" | Role | "MEMBER_CREATOR" | "MEMBER_LABEL_REP";
 
@@ -57,14 +59,14 @@ const matchesFilter = (entry: DirectoryEntry, filter: RoleFilter) => {
   return true;
 };
 
-export function UserTable() {
+export function UserTable({ entries }: { entries: DirectoryEntry[] }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<RoleFilter>("ALL");
   const [selected, setSelected] = useState<DirectoryEntry | null>(null);
 
   const rows = useMemo(
     () =>
-      directoryUsers.filter((entry) => {
+      entries.filter((entry) => {
         if (!matchesFilter(entry, filter)) return false;
         if (!query.trim()) return true;
         const q = query.toLowerCase();
@@ -73,7 +75,7 @@ export function UserTable() {
           entry.email.toLowerCase().includes(q)
         );
       }),
-    [filter, query],
+    [entries, filter, query],
   );
 
   return (
@@ -175,5 +177,4 @@ export function UserTable() {
   );
 }
 
-export type { DirectoryEntry };
 export type { User };

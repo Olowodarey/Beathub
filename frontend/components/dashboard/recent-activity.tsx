@@ -7,9 +7,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { activityFeed } from "@/lib/mock-data";
 import { formatRelativeTime } from "@/lib/format";
-import type { ActivityKind } from "@/types";
+import type { ActivityItem, ActivityKind } from "@/types";
 import { cn } from "@/lib/utils";
 
 const iconFor: Record<ActivityKind, LucideIcon> = {
@@ -30,7 +29,7 @@ const tintFor: Record<ActivityKind, string> = {
   PAYOUT_SENT: "bg-muted text-muted-foreground",
 };
 
-export function RecentActivity() {
+export function RecentActivity({ items }: { items: ActivityItem[] }) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -39,8 +38,13 @@ export function RecentActivity() {
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
+        {items.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted-foreground">
+            No recent activity.
+          </p>
+        ) : (
         <ol className="space-y-4">
-          {activityFeed.map((item) => {
+          {items.map((item) => {
             const Icon = iconFor[item.kind];
             return (
               <li key={item.id} className="flex gap-3">
@@ -69,6 +73,7 @@ export function RecentActivity() {
             );
           })}
         </ol>
+        )}
       </CardContent>
     </Card>
   );

@@ -8,71 +8,113 @@ import {
   useMemo,
   useState,
 } from "react";
-import {
-  buildCurrentUser,
-  type CurrentUserKey,
-} from "@/lib/mock-data";
-import type { CurrentUser } from "@/types";
+import { useAuth } from "@clerk/nextjs";
+import { useApiClient } from "@/lib/api-client";
+import type { MeResponse } from "@/lib/api-types";
+import type { CurrentUser, Membership, Team } from "@/types";
 
-// Dev-only role switcher. Persists selection to localStorage so page
-// refreshes hold the chosen role. Rip out and replace with real Clerk data
-// once auth is wired.
+const STORAGE_KEY = "beathub:activeTeamId";
 
-const STORAGE_KEY = "beathub:mockRole";
-const DEFAULT_ROLE: CurrentUserKey = "owner";
-
-interface RoleContextValue {
-  currentUser: CurrentUser;
-  activeKey: CurrentUserKey;
-  setActiveKey: (key: CurrentUserKey) => void;
+interface CurrentUserContextValue {
+  currentUser: CurrentUser | null;
+  memberships: Membership[];
+  teams: Team[];
+  activeTeamId: string | null;
+  setActiveTeamId: (teamId: string) => void;
+  loading: boolean;
+  error: Error | null;
+  refresh: () => Promise<void>;
 }
 
-const RoleContext = createContext<RoleContextValue | null>(null);
+const Ctx = createContext<CurrentUserContextValue | null>(null);
 
-const isValidKey = (key: string | null): key is CurrentUserKey =>
-  key === "owner" || key === "admin" || key === "creator" || key === "labelRep";
+export function CurrentUserProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { isLoaded, isSignedIn } = useAuth();
+  const api = useApiClient();
 
-export function RoleProvider({ children }: { children: React.ReactNode }) {
-  const [activeKey, setActiveKeyState] = useState<CurrentUserKey>(DEFAULT_ROLE);
-  const [hydrated, setHydrated] = useState(false);
+  const [me, setMe] = useState<MeResponse | null>(null);
+  const [activeTeamId, setActiveTeamIdState] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await api.get<MeResponse>("/me");
+      setMe(data);
+      const stored =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem(STORAGE_KEY)
+          : null;
+      const validStored =
+        stored && data.teams.some((t) => t.id === stored) ? stored : null;
+      const chosen = validStored ?? data.teams[0]?.id ?? null;
+      setActiveTeamIdState(chosen);
+    } catch (e) {
+      setError(e as Error);
+      setMe(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [api]);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (isValidKey(stored)) setActiveKeyState(stored);
-    setHydrated(true);
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setMe(null);
+      setActiveTeamIdState(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+    void load();
+  }, [isLoaded, isSignedIn, load]);
+
+  const setActiveTeamId = useCallback((teamId: string) => {
+    setActiveTeamIdState(teamId);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(STORAGE_KEY, teamId);
+    }
   }, []);
 
-  const setActiveKey = useCallback((key: CurrentUserKey) => {
-    setActiveKeyState(key);
-    window.localStorage.setItem(STORAGE_KEY, key);
-  }, []);
+  const value = useMemo<CurrentUserContextValue>(() => {
+    const membership =
+      me && activeTeamId
+        ? me.memberships.find((m) => m.teamId === activeTeamId) ?? null
+        : null;
+    const team =
+      me && activeTeamId
+        ? me.teams.find((t) => t.id === activeTeamId) ?? null
+        : null;
+    const currentUser: CurrentUser | null =
+      me && membership && team ? { user: me.user, membership, team } : null;
 
-  const value = useMemo<RoleContextValue>(
-    () => ({
-      currentUser: buildCurrentUser(activeKey),
-      activeKey,
-      setActiveKey,
-    }),
-    [activeKey, setActiveKey],
-  );
+    return {
+      currentUser,
+      memberships: me?.memberships ?? [],
+      teams: me?.teams ?? [],
+      activeTeamId,
+      setActiveTeamId,
+      loading,
+      error,
+      refresh: load,
+    };
+  }, [me, activeTeamId, setActiveTeamId, loading, error, load]);
 
-  // Avoid a flash of the wrong role before localStorage read.
-  if (!hydrated) {
-    return (
-      <RoleContext.Provider value={value}>
-        <div aria-hidden className="opacity-0">
-          {children}
-        </div>
-      </RoleContext.Provider>
-    );
-  }
-
-  return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useCurrentUser() {
-  const ctx = useContext(RoleContext);
-  if (!ctx)
-    throw new Error("useCurrentUser must be used inside a RoleProvider");
+  const ctx = useContext(Ctx);
+  if (!ctx) {
+    throw new Error(
+      "useCurrentUser must be used inside CurrentUserProvider",
+    );
+  }
   return ctx;
 }

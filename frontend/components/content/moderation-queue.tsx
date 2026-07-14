@@ -22,15 +22,20 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
-import { moderationQueue } from "@/lib/mock-data";
 import { formatDuration, formatRelativeTime } from "@/lib/format";
 import type { ContentItem, ContentStatus } from "@/types";
 
 type StatusFilter = "ALL" | ContentStatus;
 
-export function ModerationQueue() {
-  const [items, setItems] = useState<ContentItem[]>(moderationQueue);
+export function ModerationQueue({
+  items,
+  onDecide,
+}: {
+  items: ContentItem[];
+  onDecide: (id: string, next: "APPROVED" | "REJECTED") => Promise<void>;
+}) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const filtered = useMemo(
     () =>
@@ -40,13 +45,18 @@ export function ModerationQueue() {
     [items, statusFilter],
   );
 
-  const decide = (id: string, next: "APPROVED" | "REJECTED") => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status: next } : item)),
-    );
-    toast.success(
-      next === "APPROVED" ? "Content approved" : "Content rejected",
-    );
+  const decide = async (id: string, next: "APPROVED" | "REJECTED") => {
+    setBusyId(id);
+    try {
+      await onDecide(id, next);
+      toast.success(
+        next === "APPROVED" ? "Content approved" : "Content rejected",
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update");
+    } finally {
+      setBusyId(null);
+    }
   };
 
   return (
@@ -140,6 +150,7 @@ export function ModerationQueue() {
                         <Button
                           size="sm"
                           variant="outline"
+                          disabled={busyId === item.id}
                           onClick={() => decide(item.id, "REJECTED")}
                         >
                           <X aria-hidden />
@@ -147,6 +158,7 @@ export function ModerationQueue() {
                         </Button>
                         <Button
                           size="sm"
+                          disabled={busyId === item.id}
                           onClick={() => decide(item.id, "APPROVED")}
                         >
                           <Check aria-hidden />

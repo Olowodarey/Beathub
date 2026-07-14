@@ -1,19 +1,59 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CampaignList } from "@/components/promote/campaign-list";
 import { CampaignRequestForm } from "@/components/promote/campaign-request-form";
 import { CampaignReviewQueue } from "@/components/promote/campaign-review-queue";
+import { useApiClient } from "@/lib/api-client";
 import { useCurrentUser } from "@/lib/current-user";
-import { campaigns as allCampaigns } from "@/lib/mock-data";
+import type { Campaign } from "@/types";
 
 export default function PromotePage() {
-  const { currentUser } = useCurrentUser();
-  const { user, membership } = currentUser;
-  const role = membership.role;
+  const { currentUser, activeTeamId } = useCurrentUser();
+  const api = useApiClient();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!activeTeamId) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    api
+      .get<Campaign[]>(`/teams/${activeTeamId}/campaigns`)
+      .then((r) => !cancelled && setCampaigns(r))
+      .catch((e) => !cancelled && setError(e as Error))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTeamId, api]);
+
+  const handleDecide = useCallback(
+    async (id: string, next: "APPROVED" | "REJECTED", note: string | null) => {
+      const updated = await api.patch<Campaign>(`/campaigns/${id}/review`, {
+        status: next,
+        reviewerNote: note ?? undefined,
+      });
+      setCampaigns((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    },
+    [api],
+  );
+
+  const handleCreated = useCallback((c: Campaign) => {
+    setCampaigns((prev) => [c, ...prev]);
+  }, []);
+
+  const role = currentUser?.membership.role;
   const canReview = role === "OWNER" || role === "ADMIN";
 
-  const ownCampaigns = allCampaigns.filter(
-    (campaign) => campaign.requesterId === user.id,
+  const ownCampaigns = useMemo(
+    () =>
+      currentUser
+        ? campaigns.filter((c) => c.requesterId === currentUser.user.id)
+        : [],
+    [campaigns, currentUser],
   );
 
   return (
@@ -27,12 +67,21 @@ export default function PromotePage() {
         </p>
       </div>
 
-      {canReview ? (
-        <CampaignReviewQueue />
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading campaigns…</p>
+      ) : error ? (
+        <p className="text-sm text-destructive">
+          Couldn&apos;t load campaigns: {error.message}
+        </p>
+      ) : canReview ? (
+        <CampaignReviewQueue
+          campaigns={campaigns}
+          onDecide={handleDecide}
+        />
       ) : (
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-1">
-            <CampaignRequestForm />
+            <CampaignRequestForm onCreated={handleCreated} />
           </div>
           <div className="lg:col-span-2">
             <h2 className="mb-3 text-sm font-medium text-muted-foreground">

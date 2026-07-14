@@ -17,6 +17,7 @@ export function RoleGate({
   children,
 }: RoleGateProps) {
   const { currentUser } = useCurrentUser();
+  if (!currentUser) return <>{fallback}</>;
   const { role, personaType } = currentUser.membership;
 
   if (allow && !allow.includes(role)) return <>{fallback}</>;

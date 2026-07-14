@@ -30,9 +30,9 @@ const tabs: Tab[] = [
 export function SettingsTabs() {
   const pathname = usePathname();
   const { currentUser } = useCurrentUser();
-  const role = currentUser.membership.role;
+  const role = currentUser?.membership.role;
   const visible = tabs.filter(
-    (tab) => !tab.roles || tab.roles.includes(role),
+    (tab) => !tab.roles || (role && tab.roles.includes(role)),
   );
 
   return (
