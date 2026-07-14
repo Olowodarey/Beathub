@@ -23,7 +23,7 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   {
-    label: "Overview",
+    label: "Home",
     href: "/dashboard",
     icon: LayoutDashboard,
   },
@@ -55,11 +55,14 @@ export const navItems: NavItem[] = [
     label: "Analytics",
     href: "/dashboard/analytics",
     icon: BarChart3,
+    // Analytics is for people making music / running the platform, not listeners.
+    personas: ["CREATOR", "LABEL_REP"],
   },
   {
     label: "Promote",
     href: "/dashboard/promote",
     icon: Megaphone,
+    personas: ["CREATOR", "LABEL_REP"],
   },
   {
     label: "Settings",
