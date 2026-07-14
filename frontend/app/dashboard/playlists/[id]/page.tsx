@@ -269,7 +269,7 @@ export default function PlaylistDetailPage() {
                     key={entry.entryId}
                     className={cn(
                       "group grid grid-cols-[40px_1fr_auto] items-center gap-3 border-b px-4 py-3 last:border-b-0 transition-colors hover:bg-muted/50",
-                      isCurrent && "bg-brand/5",
+                      isCurrent && "bg-brand/15",
                     )}
                   >
                     <div className="relative flex items-center justify-center text-sm tabular-nums text-muted-foreground">

@@ -118,7 +118,7 @@ export function PlayerBar() {
               aria-valuenow={currentTime}
               tabIndex={0}
             >
-              <div className="relative h-1 w-full overflow-hidden rounded-full bg-muted">
+              <div className="relative h-1 w-full overflow-hidden rounded-full bg-muted-foreground/30">
                 <div
                   className={cn(
                     "h-full bg-brand transition-[width] duration-100",

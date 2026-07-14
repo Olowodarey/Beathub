@@ -88,7 +88,7 @@ export default function LibraryPage() {
                 return (
                   <TableRow
                     key={track.id}
-                    className={cn(isCurrent && "bg-brand/5")}
+                    className={cn(isCurrent && "bg-brand/15")}
                   >
                     <TableCell>
                       <PlayButton

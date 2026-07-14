@@ -10,7 +10,7 @@ export default function SettingsLayout({
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Team, billing, and system controls for the workspace.
+          Your profile and workspace controls.
         </p>
       </div>
       <SettingsTabs />

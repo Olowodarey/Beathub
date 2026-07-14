@@ -73,7 +73,7 @@ export function QuickActions() {
             <Link
               key={action.label}
               href={action.href}
-              className="group flex items-center gap-3 rounded-md border bg-background p-3 transition-colors hover:border-brand/40 hover:bg-brand/5"
+              className="group flex items-center gap-3 rounded-md border bg-background p-3 transition-colors hover:border-brand/40 hover:bg-brand/10"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted text-muted-foreground group-hover:bg-brand/10 group-hover:text-brand">
                 <action.icon className="h-4 w-4" aria-hidden />

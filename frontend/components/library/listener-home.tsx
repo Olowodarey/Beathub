@@ -43,7 +43,7 @@ export function ListenerHome({
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
-      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-brand/15 via-transparent to-accent/30 p-6 sm:p-8">
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-brand/25 via-brand/5 to-accent/25 p-6 sm:p-8">
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-brand/25 blur-3xl"
           aria-hidden

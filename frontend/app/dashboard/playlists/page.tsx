@@ -98,7 +98,7 @@ export default function PlaylistsPage() {
       </div>
 
       {invites.length > 0 ? (
-        <section className="space-y-3 rounded-md border border-brand/30 bg-brand/5 p-4">
+        <section className="space-y-3 rounded-md border border-brand/40 bg-brand/10 p-4">
           <h2 className="text-sm font-semibold">
             You have {invites.length} playlist{invites.length === 1 ? "" : "s"} to accept
           </h2>
@@ -199,7 +199,7 @@ function Section({
           >
             <Card className="h-full transition-colors group-hover:border-brand/60">
               <CardContent className="space-y-3 p-4">
-                <div className="flex h-24 items-center justify-center rounded-md bg-gradient-to-br from-brand/20 to-brand/5">
+                <div className="flex h-24 items-center justify-center rounded-md bg-gradient-to-br from-brand/30 to-accent/20">
                   <ListMusic className="h-8 w-8 text-brand" />
                 </div>
                 <div>
