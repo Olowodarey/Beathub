@@ -1,0 +1,164 @@
+// Prisma schema for Beathub backend.
+// Datasource URL is resolved via prisma.config.ts (reads DATABASE_URL from .env).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum PersonaType {
+  CREATOR
+  LABEL_REP
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum ContentKind {
+  TRACK
+  PODCAST
+}
+
+enum ContentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AdSlotType {
+  HOMEPAGE_FEATURED
+  GENRE_SPOTLIGHT
+  PLAYLIST_PLACEMENT
+}
+
+enum CampaignStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
+  ENDED
+}
+
+model User {
+  id        String     @id @default(cuid())
+  clerkId   String     @unique
+  email     String     @unique
+  name      String?
+  avatarUrl String?
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+
+  memberships       Membership[]
+  uploadedContent   Content[]    @relation("ContentUploader")
+  campaignsCreated  AdCampaign[] @relation("CampaignRequester")
+  campaignsReviewed AdCampaign[] @relation("CampaignReviewer")
+  invitationsSent   Invitation[] @relation("InvitationInviter")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?
+  createdAt DateTime @default(now())
+
+  memberships Membership[]
+  invitations Invitation[]
+  campaigns   AdCampaign[]
+  content     Content[]
+}
+
+model Membership {
+  id          String       @id @default(cuid())
+  userId      String
+  teamId      String
+  role        Role
+  personaType PersonaType?
+  createdAt   DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@index([teamId])
+}
+
+model Invitation {
+  id          String           @id @default(cuid())
+  email       String
+  teamId      String
+  role        Role
+  personaType PersonaType?
+  status      InvitationStatus @default(PENDING)
+  token       String           @unique
+  invitedById String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime         @default(now())
+
+  team      Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  invitedBy User @relation("InvitationInviter", fields: [invitedById], references: [id])
+
+  @@index([teamId])
+  @@index([email])
+}
+
+model Content {
+  id              String        @id @default(cuid())
+  teamId          String
+  kind            ContentKind
+  title           String
+  uploaderId      String
+  durationSeconds Int
+  genre           String
+  status          ContentStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+
+  team     Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  uploader User @relation("ContentUploader", fields: [uploaderId], references: [id])
+
+  @@index([teamId])
+  @@index([status])
+}
+
+model AdCampaign {
+  id           String         @id @default(cuid())
+  teamId       String
+  requesterId  String
+  slotType     AdSlotType
+  budgetUsd    Int
+  startDate    DateTime
+  endDate      DateTime
+  status       CampaignStatus @default(PENDING)
+  reviewerId   String?
+  reviewerNote String?
+  impressions  Int?
+  clicks       Int?
+  createdAt   DateTime        @default(now())
+
+  team      Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  requester User  @relation("CampaignRequester", fields: [requesterId], references: [id])
+  reviewer  User? @relation("CampaignReviewer", fields: [reviewerId], references: [id])
+
+  @@index([teamId])
+  @@index([status])
+}
