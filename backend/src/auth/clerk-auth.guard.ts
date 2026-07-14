@@ -39,26 +39,33 @@ export class ClerkAuthGuard implements CanActivate {
     return true;
   }
 
-  // Every user gets a Membership on the default team as MEMBER + LISTENER
-  // the first time they authenticate. Upgrades to CREATOR happen via the
-  // creator-application flow.
+  // Every user gets a Membership on the default team the first time they
+  // authenticate. If no team exists yet, we bootstrap one and make the first
+  // authenticated user its OWNER; everyone else joins as MEMBER + LISTENER.
+  // Upgrades to CREATOR happen via the creator-application flow.
   private async ensureDefaultMembership(userId: string) {
     const existing = await this.prisma.membership.findFirst({
       where: { userId },
     });
     if (existing) return;
 
-    const defaultTeam = await this.prisma.team.findFirst({
+    let defaultTeam = await this.prisma.team.findFirst({
       orderBy: { createdAt: 'asc' },
     });
-    if (!defaultTeam) return; // no team exists yet; bootstrap is manual
+
+    const isBootstrap = !defaultTeam;
+    if (!defaultTeam) {
+      defaultTeam = await this.prisma.team.create({
+        data: { name: 'Beathub', slug: 'beathub' },
+      });
+    }
 
     await this.prisma.membership.create({
       data: {
         userId,
         teamId: defaultTeam.id,
-        role: 'MEMBER',
-        personaType: 'LISTENER',
+        role: isBootstrap ? 'OWNER' : 'MEMBER',
+        personaType: isBootstrap ? null : 'LISTENER',
       },
     });
   }
