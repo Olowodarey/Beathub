@@ -2,11 +2,12 @@
 
 import { Music2 } from "lucide-react";
 import { AddToPlaylistButton } from "@/components/library/add-to-playlist-button";
-import { AudioPlayer } from "@/components/library/audio-player";
+import { PlayButton } from "@/components/library/play-button";
 import { Card, CardContent } from "@/components/ui/card";
+import { usePlayer } from "@/lib/player";
+import { cn } from "@/lib/utils";
 import type { ContentItem } from "@/types";
 
-// Deterministic pastel gradient per track so covers feel distinct without art.
 function coverGradient(id: string) {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
@@ -19,24 +20,42 @@ function coverGradient(id: string) {
 
 export function TrackCard({
   track,
-  onPlayed,
+  queue,
+  index,
 }: {
   track: ContentItem;
-  onPlayed: (updated: ContentItem) => void;
+  queue?: ContentItem[];
+  index?: number;
 }) {
+  const player = usePlayer();
+  const isCurrent = player.currentTrack?.id === track.id;
+
   return (
-    <Card className="overflow-hidden p-0">
+    <Card
+      className={cn(
+        "group overflow-hidden p-0 transition-colors",
+        isCurrent && "ring-2 ring-brand",
+      )}
+    >
       <div
         className="relative flex aspect-square w-full items-center justify-center text-white/90"
         style={{ background: coverGradient(track.id) }}
         aria-hidden
       >
         <Music2 className="h-10 w-10 drop-shadow" />
-        <span className="absolute right-2 top-2 rounded-full bg-black/25 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide backdrop-blur-sm">
+        <span className="absolute right-2 top-2 rounded-full bg-black/25 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white backdrop-blur-sm">
           {track.genre}
         </span>
+        <div className="absolute inset-0 flex items-end justify-end p-3 opacity-0 transition-opacity group-hover:opacity-100">
+          <PlayButton
+            track={track}
+            queue={queue}
+            startIndex={index}
+            className="shadow-lg"
+          />
+        </div>
       </div>
-      <CardContent className="space-y-3 p-4">
+      <CardContent className="space-y-2 p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{track.title}</p>
@@ -46,7 +65,6 @@ export function TrackCard({
           </div>
           <AddToPlaylistButton contentId={track.id} />
         </div>
-        <AudioPlayer track={track} onPlayed={onPlayed} />
       </CardContent>
     </Card>
   );

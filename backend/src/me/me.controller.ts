@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthedRequest } from '../auth/request-user.type';
@@ -56,5 +56,26 @@ export class MeController {
     @Body() dto: CreatePlaylistDto,
   ) {
     return this.playlists.create(authUser.user.id, dto.name);
+  }
+
+  @Get('playlist-invites')
+  listPlaylistInvites(@CurrentUser() authUser: Authed) {
+    return this.playlists.listMyInvites(authUser.user.id);
+  }
+
+  @Post('playlist-invites/:id/accept')
+  acceptPlaylistInvite(
+    @Param('id') id: string,
+    @CurrentUser() authUser: Authed,
+  ) {
+    return this.playlists.respondToInvite(id, authUser.user.id, 'ACCEPTED');
+  }
+
+  @Post('playlist-invites/:id/decline')
+  declinePlaylistInvite(
+    @Param('id') id: string,
+    @CurrentUser() authUser: Authed,
+  ) {
+    return this.playlists.respondToInvite(id, authUser.user.id, 'DECLINED');
   }
 }

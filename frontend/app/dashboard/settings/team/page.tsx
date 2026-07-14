@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ShieldAlert } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { InviteMemberDialog } from "@/components/settings/invite-member-dialog";
 import { MemberList } from "@/components/settings/member-list";
 import { PendingInvitationsTable } from "@/components/settings/pending-invitations-table";
@@ -19,23 +21,21 @@ export default function SettingsTeamPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const canInvite = currentUser?.membership.role === "OWNER";
-  const canSeeInvites =
+  const canManageTeam =
     currentUser?.membership.role === "OWNER" ||
     currentUser?.membership.role === "ADMIN";
+  const canInvite = currentUser?.membership.role === "OWNER";
 
   const load = useCallback(async () => {
-    if (!activeTeamId) return;
+    if (!activeTeamId || !canManageTeam) return;
     setLoading(true);
     setError(null);
     try {
       const [m, i] = await Promise.all([
         api.get<TeamUserRow[]>(`/teams/${activeTeamId}/users`),
-        canSeeInvites
-          ? api.get<Invitation[]>(
-              `/teams/${activeTeamId}/invitations?status=PENDING`,
-            )
-          : Promise.resolve<Invitation[]>([]),
+        api.get<Invitation[]>(
+          `/teams/${activeTeamId}/invitations?status=PENDING`,
+        ),
       ]);
       setMembers(m);
       setInvitations(i);
@@ -44,11 +44,21 @@ export default function SettingsTeamPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeTeamId, api, canSeeInvites]);
+  }, [activeTeamId, api, canManageTeam]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  if (currentUser && !canManageTeam) {
+    return (
+      <EmptyState
+        icon={ShieldAlert}
+        title="Team settings are admin-only"
+        description="Ask an owner or admin if you need to invite people or manage members."
+      />
+    );
+  }
 
   const entries = useMemo<DirectoryEntry[]>(
     () =>
@@ -100,24 +110,22 @@ export default function SettingsTeamPage() {
         )}
       </section>
 
-      {canSeeInvites ? (
-        <section className="space-y-3">
-          <div>
-            <h2 className="text-base font-semibold">Pending invitations</h2>
-            <p className="text-sm text-muted-foreground">
-              Sent invitations that haven&apos;t been accepted yet.
-            </p>
-          </div>
-          {loading ? (
-            <p className="text-sm text-muted-foreground">Loading invitations…</p>
-          ) : (
-            <PendingInvitationsTable
-              invitations={invitations}
-              onRevoke={handleRevoke}
-            />
-          )}
-        </section>
-      ) : null}
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-base font-semibold">Pending invitations</h2>
+          <p className="text-sm text-muted-foreground">
+            Sent invitations that haven&apos;t been accepted yet.
+          </p>
+        </div>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading invitations…</p>
+        ) : (
+          <PendingInvitationsTable
+            invitations={invitations}
+            onRevoke={handleRevoke}
+          />
+        )}
+      </section>
     </div>
   );
 }

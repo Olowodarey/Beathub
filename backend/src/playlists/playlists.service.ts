@@ -145,7 +145,7 @@ export class PlaylistsService {
     await this.prisma.playlistTrack.delete({ where: { id: entryId } });
   }
 
-  async addMember(playlistId: string, ownerId: string, email: string) {
+  async inviteByEmail(playlistId: string, ownerId: string, email: string) {
     const playlist = await this.assertOwner(playlistId, ownerId);
     const normalized = email.trim().toLowerCase();
     const invitee = await this.prisma.user.findUnique({
@@ -159,29 +159,122 @@ export class PlaylistsService {
     if (invitee.id === playlist.ownerId) {
       throw new BadRequestException('You already own this playlist');
     }
-    try {
-      const created = await this.prisma.playlistMember.create({
-        data: { playlistId, userId: invitee.id },
-        include: { user: true },
-      });
-      return {
-        id: created.id,
-        userId: created.userId,
-        name: created.user.name ?? created.user.email,
-        email: created.user.email,
-        addedAt: created.addedAt.toISOString(),
-      };
-    } catch (err) {
-      if (
-        typeof err === 'object' &&
-        err &&
-        'code' in err &&
-        (err as { code?: string }).code === 'P2002'
-      ) {
-        throw new ConflictException('That user is already a member');
-      }
-      throw err;
+    const alreadyMember = await this.prisma.playlistMember.findFirst({
+      where: { playlistId, userId: invitee.id },
+    });
+    if (alreadyMember) {
+      throw new ConflictException('That user is already a member');
     }
+    const pending = await this.prisma.playlistInvite.findFirst({
+      where: { playlistId, inviteeId: invitee.id, status: 'PENDING' },
+    });
+    if (pending) {
+      throw new ConflictException('An invite is already pending for that user');
+    }
+
+    const created = await this.prisma.playlistInvite.create({
+      data: {
+        playlistId,
+        invitedById: ownerId,
+        inviteeId: invitee.id,
+      },
+      include: { invitee: true },
+    });
+    return this.mapInvite(created, playlist.name);
+  }
+
+  async listPendingInvitesForPlaylist(playlistId: string, ownerId: string) {
+    await this.assertOwner(playlistId, ownerId);
+    const rows = await this.prisma.playlistInvite.findMany({
+      where: { playlistId, status: 'PENDING' },
+      include: { invitee: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      userId: r.inviteeId,
+      name: r.invitee.name ?? r.invitee.email,
+      email: r.invitee.email,
+      createdAt: r.createdAt.toISOString(),
+    }));
+  }
+
+  async revokeInvite(playlistId: string, ownerId: string, inviteId: string) {
+    await this.assertOwner(playlistId, ownerId);
+    const invite = await this.prisma.playlistInvite.findUnique({
+      where: { id: inviteId },
+    });
+    if (!invite || invite.playlistId !== playlistId) {
+      throw new NotFoundException('Invite not found');
+    }
+    if (invite.status !== 'PENDING') {
+      throw new ConflictException('Invite already decided');
+    }
+    await this.prisma.playlistInvite.update({
+      where: { id: inviteId },
+      data: { status: 'REVOKED', decidedAt: new Date() },
+    });
+  }
+
+  async listMyInvites(userId: string) {
+    const rows = await this.prisma.playlistInvite.findMany({
+      where: { inviteeId: userId, status: 'PENDING' },
+      include: {
+        invitedBy: true,
+        playlist: {
+          include: {
+            owner: true,
+            _count: { select: { tracks: true, members: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      playlistId: r.playlistId,
+      playlistName: r.playlist.name,
+      ownerName: r.playlist.owner.name ?? r.playlist.owner.email,
+      invitedByName: r.invitedBy.name ?? r.invitedBy.email,
+      trackCount: r.playlist._count.tracks,
+      memberCount: r.playlist._count.members,
+      createdAt: r.createdAt.toISOString(),
+    }));
+  }
+
+  async respondToInvite(
+    inviteId: string,
+    userId: string,
+    decision: 'ACCEPTED' | 'DECLINED',
+  ) {
+    const invite = await this.prisma.playlistInvite.findUnique({
+      where: { id: inviteId },
+    });
+    if (!invite || invite.inviteeId !== userId) {
+      throw new NotFoundException('Invite not found');
+    }
+    if (invite.status !== 'PENDING') {
+      throw new ConflictException('Invite already decided');
+    }
+    await this.prisma.$transaction(async (tx) => {
+      await tx.playlistInvite.update({
+        where: { id: inviteId },
+        data: { status: decision, decidedAt: new Date() },
+      });
+      if (decision === 'ACCEPTED') {
+        await tx.playlistMember.upsert({
+          where: {
+            playlistId_userId: {
+              playlistId: invite.playlistId,
+              userId,
+            },
+          },
+          create: { playlistId: invite.playlistId, userId },
+          update: {},
+        });
+      }
+    });
+    return { playlistId: invite.playlistId };
   }
 
   async removeMember(
@@ -193,6 +286,27 @@ export class PlaylistsService {
     await this.prisma.playlistMember.deleteMany({
       where: { playlistId, userId: memberUserId },
     });
+  }
+
+  private mapInvite(
+    invite: {
+      id: string;
+      inviteeId: string;
+      status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'REVOKED';
+      createdAt: Date;
+      invitee: { name: string | null; email: string };
+    },
+    playlistName: string,
+  ) {
+    return {
+      id: invite.id,
+      userId: invite.inviteeId,
+      name: invite.invitee.name ?? invite.invitee.email,
+      email: invite.invitee.email,
+      status: invite.status,
+      createdAt: invite.createdAt.toISOString(),
+      playlistName,
+    };
   }
 
   private async assertAccess(playlistId: string, userId: string) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Music2, Sparkles } from "lucide-react";
 import { TrackCard } from "@/components/library/track-card";
@@ -35,10 +35,6 @@ export function ListenerHome({
     };
   }, [api, teamId]);
 
-  const handlePlayed = useCallback((updated: ContentItem) => {
-    setTracks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-  }, []);
-
   const newThisWeek = useMemo(() => tracks.slice(0, 6), [tracks]);
   const mostPlayed = useMemo(
     () => [...tracks].sort((a, b) => b.playCount - a.playCount).slice(0, 6),
@@ -47,13 +43,26 @@ export function ListenerHome({
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Good to see you, {firstName}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Fresh drops and the tracks everyone&apos;s playing.
-        </p>
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-brand/15 via-transparent to-accent/30 p-6 sm:p-8">
+        <div
+          className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-brand/25 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-accent/40 blur-3xl"
+          aria-hidden
+        />
+        <div className="relative">
+          <p className="text-xs font-medium uppercase tracking-widest text-brand">
+            Now playing on Beathub
+          </p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+            Good to see you, {firstName}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+            Fresh drops and the tracks everyone&apos;s playing.
+          </p>
+        </div>
       </div>
 
       {loading ? (
@@ -75,14 +84,12 @@ export function ListenerHome({
             icon={Sparkles}
             emptyLabel="Nothing new right now."
             tracks={newThisWeek}
-            onPlayed={handlePlayed}
           />
           <Section
             title="Most played"
             icon={Music2}
             emptyLabel="No plays yet — be the first."
             tracks={mostPlayed}
-            onPlayed={handlePlayed}
           />
           <div className="text-right">
             <Link
@@ -106,13 +113,11 @@ function Section({
   icon: Icon,
   emptyLabel,
   tracks,
-  onPlayed,
 }: {
   title: string;
   icon: typeof Music2;
   emptyLabel: string;
   tracks: ContentItem[];
-  onPlayed: (updated: ContentItem) => void;
 }) {
   return (
     <section className="space-y-3">
@@ -124,8 +129,13 @@ function Section({
         <p className="text-sm text-muted-foreground">{emptyLabel}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {tracks.map((track) => (
-            <TrackCard key={track.id} track={track} onPlayed={onPlayed} />
+          {tracks.map((track, i) => (
+            <TrackCard
+              key={track.id}
+              track={track}
+              queue={tracks}
+              index={i}
+            />
           ))}
         </div>
       )}

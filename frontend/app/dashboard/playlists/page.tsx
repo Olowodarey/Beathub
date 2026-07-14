@@ -2,35 +2,64 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ListMusic, Music2, Plus, Users } from "lucide-react";
+import { Check, ListMusic, Music2, Plus, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useApiClient } from "@/lib/api-client";
-import type { PlaylistSummary } from "@/types";
+import type { MyPlaylistInvite, PlaylistSummary } from "@/types";
 
 export default function PlaylistsPage() {
   const api = useApiClient();
   const [items, setItems] = useState<PlaylistSummary[]>([]);
+  const [invites, setInvites] = useState<MyPlaylistInvite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [busyInvite, setBusyInvite] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const rows = await api.get<PlaylistSummary[]>("/me/playlists");
+      const [rows, invitesRows] = await Promise.all([
+        api.get<PlaylistSummary[]>("/me/playlists"),
+        api.get<MyPlaylistInvite[]>("/me/playlist-invites"),
+      ]);
       setItems(rows);
+      setInvites(invitesRows);
     } catch (e) {
       setError(e as Error);
     } finally {
       setLoading(false);
     }
   }, [api]);
+
+  const respondToInvite = async (
+    inviteId: string,
+    action: "accept" | "decline",
+  ) => {
+    setBusyInvite(inviteId);
+    try {
+      await api.post(`/me/playlist-invites/${inviteId}/${action}`);
+      setInvites((prev) => prev.filter((i) => i.id !== inviteId));
+      if (action === "accept") {
+        toast.success("Joined playlist");
+        await load();
+      } else {
+        toast.success("Invite declined");
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Couldn't respond to invite",
+      );
+    } finally {
+      setBusyInvite(null);
+    }
+  };
 
   useEffect(() => {
     void load();
@@ -67,6 +96,48 @@ export default function PlaylistsPage() {
           people you invite will see the playlist.
         </p>
       </div>
+
+      {invites.length > 0 ? (
+        <section className="space-y-3 rounded-md border border-brand/30 bg-brand/5 p-4">
+          <h2 className="text-sm font-semibold">
+            You have {invites.length} playlist{invites.length === 1 ? "" : "s"} to accept
+          </h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {invites.map((inv) => (
+              <div
+                key={inv.id}
+                className="flex items-start justify-between gap-3 rounded-md border bg-card p-3 text-sm"
+              >
+                <div className="min-w-0">
+                  <div className="truncate font-semibold">{inv.playlistName}</div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    invited by {inv.invitedByName} · {inv.trackCount} tracks
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => respondToInvite(inv.id, "decline")}
+                    disabled={busyInvite === inv.id}
+                  >
+                    <X className="mr-1 h-4 w-4" />
+                    Decline
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => respondToInvite(inv.id, "accept")}
+                    disabled={busyInvite === inv.id}
+                  >
+                    <Check className="mr-1 h-4 w-4" />
+                    Accept
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <Card>
         <CardContent className="p-4">

@@ -27,6 +27,13 @@ enum ApplicationStatus {
   REJECTED
 }
 
+enum PlaylistInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+}
+
 enum UserStatus {
   ACTIVE
   INVITED
@@ -84,6 +91,8 @@ model User {
   playlistsOwned       Playlist[]           @relation("PlaylistOwner")
   playlistMemberships  PlaylistMember[]     @relation("PlaylistMember")
   playlistTracksAdded  PlaylistTrack[]      @relation("PlaylistTrackAdder")
+  playlistInvitesSent  PlaylistInvite[]     @relation("PlaylistInviteInviter")
+  playlistInvitesGot   PlaylistInvite[]     @relation("PlaylistInviteInvitee")
 }
 
 model Team {
@@ -167,8 +176,26 @@ model Playlist {
   owner   User             @relation("PlaylistOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   tracks  PlaylistTrack[]
   members PlaylistMember[]
+  invites PlaylistInvite[]
 
   @@index([ownerId])
+}
+
+model PlaylistInvite {
+  id          String               @id @default(cuid())
+  playlistId  String
+  invitedById String
+  inviteeId   String
+  status      PlaylistInviteStatus @default(PENDING)
+  createdAt   DateTime             @default(now())
+  decidedAt   DateTime?
+
+  playlist  Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  invitedBy User     @relation("PlaylistInviteInviter", fields: [invitedById], references: [id])
+  invitee   User     @relation("PlaylistInviteInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+
+  @@index([inviteeId, status])
+  @@index([playlistId, status])
 }
 
 model PlaylistTrack {

@@ -63,13 +63,31 @@ export class PlaylistsController {
     return this.playlists.removeTrack(id, authUser.user.id, entryId);
   }
 
-  @Post(':id/members')
-  addMember(
+  @Post(':id/invites')
+  createInvite(
     @Param('id') id: string,
     @CurrentUser() authUser: Authed,
     @Body() dto: AddMemberDto,
   ) {
-    return this.playlists.addMember(id, authUser.user.id, dto.email);
+    return this.playlists.inviteByEmail(id, authUser.user.id, dto.email);
+  }
+
+  @Get(':id/invites')
+  listPendingInvites(
+    @Param('id') id: string,
+    @CurrentUser() authUser: Authed,
+  ) {
+    return this.playlists.listPendingInvitesForPlaylist(id, authUser.user.id);
+  }
+
+  @Delete(':id/invites/:inviteId')
+  @HttpCode(204)
+  revokeInvite(
+    @Param('id') id: string,
+    @Param('inviteId') inviteId: string,
+    @CurrentUser() authUser: Authed,
+  ) {
+    return this.playlists.revokeInvite(id, authUser.user.id, inviteId);
   }
 
   @Delete(':id/members/:userId')

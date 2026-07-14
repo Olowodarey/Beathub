@@ -66,6 +66,25 @@ export interface PlaylistDetail {
   members: PlaylistMember[];
 }
 
+export interface PendingInviteRow {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  createdAt: string;
+}
+
+export interface MyPlaylistInvite {
+  id: string;
+  playlistId: string;
+  playlistName: string;
+  ownerName: string;
+  invitedByName: string;
+  trackCount: number;
+  memberCount: number;
+  createdAt: string;
+}
+
 export type UserStatus = "ACTIVE" | "INVITED" | "SUSPENDED";
 
 export interface User {

@@ -14,7 +14,11 @@ interface Tab {
 
 const tabs: Tab[] = [
   { label: "General", href: "/dashboard/settings/general" },
-  { label: "Team & Invitations", href: "/dashboard/settings/team" },
+  {
+    label: "Team & Invitations",
+    href: "/dashboard/settings/team",
+    roles: ["OWNER", "ADMIN"],
+  },
   {
     label: "Billing",
     href: "/dashboard/settings/billing",
