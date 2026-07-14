@@ -44,7 +44,7 @@ export function SettingsTabs() {
       <nav
         role="tablist"
         aria-label="Settings sections"
-        className="flex gap-6 overflow-x-auto"
+        className="flex gap-6 overflow-x-auto overflow-y-hidden"
       >
         {visible.map((tab) => {
           const isActive =
