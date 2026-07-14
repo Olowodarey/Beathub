@@ -4,53 +4,53 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { revenueSeries } from "@/lib/mock-data";
-import { formatCompactNumber, formatCurrency } from "@/lib/format";
+import { regionShare } from "@/lib/mock-data";
+import { formatCompactNumber, formatNumber } from "@/lib/format";
 
-export function RevenueBarChart() {
+export function RegionBar() {
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
-          Revenue analytics
+          Top regions
         </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Subscription vs. ad revenue, USD
-        </p>
+        <p className="text-xs text-muted-foreground">Monthly listeners</p>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="h-64 w-full">
+        <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={revenueSeries}
-              margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
-              barCategoryGap={16}
+              layout="vertical"
+              data={regionShare}
+              margin={{ top: 4, right: 16, left: 12, bottom: 4 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="var(--border)"
-                vertical={false}
+                horizontal={false}
               />
               <XAxis
-                dataKey="month"
+                type="number"
                 stroke="var(--muted-foreground)"
                 fontSize={11}
                 tickLine={false}
                 axisLine={false}
+                tickFormatter={formatCompactNumber}
               />
               <YAxis
+                dataKey="region"
+                type="category"
                 stroke="var(--muted-foreground)"
                 fontSize={11}
+                width={100}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(v: number) => `$${formatCompactNumber(v)}`}
               />
               <Tooltip
                 contentStyle={{
@@ -59,23 +59,12 @@ export function RevenueBarChart() {
                   borderRadius: 8,
                   fontSize: 12,
                 }}
-                formatter={(v) => formatCurrency(Number(v))}
-              />
-              <Legend
-                iconType="square"
-                wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                formatter={(v) => formatNumber(Number(v))}
               />
               <Bar
-                dataKey="subscriptions"
-                name="Subscriptions"
+                dataKey="listeners"
                 fill="var(--brand)"
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar
-                dataKey="ads"
-                name="Ads"
-                fill="var(--chart-3)"
-                radius={[4, 4, 0, 0]}
+                radius={[0, 4, 4, 0]}
               />
             </BarChart>
           </ResponsiveContainer>

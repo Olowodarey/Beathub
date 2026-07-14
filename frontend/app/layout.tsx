@@ -40,7 +40,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <RoleProvider>
-            <TooltipProvider delayDuration={150}>{children}</TooltipProvider>
+            <TooltipProvider delay={150}>{children}</TooltipProvider>
           </RoleProvider>
           <Toaster position="top-right" />
         </ThemeProvider>

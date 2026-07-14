@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -58,31 +59,35 @@ export function Header() {
         <RoleSwitcher />
         <ThemeToggle />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full"
-              aria-label="Account menu"
-            >
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-brand/10 text-xs font-medium text-brand">
-                  {initials(user.name)}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full"
+                aria-label="Account menu"
+              />
+            }
+          >
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-brand/10 text-xs font-medium text-brand">
+                {initials(user.name)}
+              </AvatarFallback>
+            </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="flex flex-col">
-              <span className="text-sm">{user.name}</span>
-              <span className="text-xs font-normal text-muted-foreground">
-                {user.email}
-              </span>
-              <span className="mt-1 text-xs font-normal text-muted-foreground">
-                {roleLabel(membership.role, membership.personaType)} ·{" "}
-                {currentUser.team.name}
-              </span>
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="flex flex-col">
+                <span className="text-sm">{user.name}</span>
+                <span className="text-xs font-normal text-muted-foreground">
+                  {user.email}
+                </span>
+                <span className="mt-1 text-xs font-normal text-muted-foreground">
+                  {roleLabel(membership.role, membership.personaType)} ·{" "}
+                  {currentUser.team.name}
+                </span>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled>
               <LogOut className="mr-2 h-4 w-4" aria-hidden />

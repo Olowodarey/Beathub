@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  Bar,
-  BarChart,
+  Area,
+  AreaChart,
   CartesianGrid,
   Legend,
   ResponsiveContainer,
@@ -14,25 +14,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revenueSeries } from "@/lib/mock-data";
 import { formatCompactNumber, formatCurrency } from "@/lib/format";
 
-export function RevenueBarChart() {
+export function RevenueArea() {
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
-          Revenue analytics
+          Revenue trend
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Subscription vs. ad revenue, USD
+          Total monthly revenue, USD
         </p>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="h-64 w-full">
+        <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={revenueSeries}
+            <AreaChart
+              data={revenueSeries.map((point) => ({
+                month: point.month,
+                total: point.subscriptions + point.ads,
+              }))}
               margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
-              barCategoryGap={16}
             >
+              <defs>
+                <linearGradient id="revenueTotal" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--brand)" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="var(--brand)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="var(--border)"
@@ -62,22 +70,18 @@ export function RevenueBarChart() {
                 formatter={(v) => formatCurrency(Number(v))}
               />
               <Legend
-                iconType="square"
+                iconType="circle"
                 wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
               />
-              <Bar
-                dataKey="subscriptions"
-                name="Subscriptions"
-                fill="var(--brand)"
-                radius={[4, 4, 0, 0]}
+              <Area
+                type="monotone"
+                dataKey="total"
+                name="Total revenue"
+                stroke="var(--brand)"
+                strokeWidth={2}
+                fill="url(#revenueTotal)"
               />
-              <Bar
-                dataKey="ads"
-                name="Ads"
-                fill="var(--chart-3)"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </CardContent>

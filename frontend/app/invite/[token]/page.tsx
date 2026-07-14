@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { CheckCircle2, Clock3, UserPlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { mockInvitation, mockTeam } from "@/lib/mock-data";
 import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 // Next.js 16: params + searchParams are Promises and must be awaited.
 type InviteState = "pending" | "expired" | "already-member";
@@ -113,12 +114,18 @@ function PendingInvite({
         </p>
       </div>
       <div className="space-y-2">
-        <Button className="w-full" asChild>
-          <Link href="/dashboard">Accept invitation</Link>
-        </Button>
-        <Button variant="ghost" className="w-full" asChild>
-          <Link href="/login">Not now</Link>
-        </Button>
+        <Link
+          href="/dashboard"
+          className={cn(buttonVariants({ size: "lg" }), "w-full")}
+        >
+          Accept invitation
+        </Link>
+        <Link
+          href="/login"
+          className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "w-full")}
+        >
+          Not now
+        </Link>
       </div>
       <p className="text-center text-xs text-muted-foreground">
         Invite token: <span className="font-mono">{token}</span>
@@ -144,9 +151,12 @@ function ExpiredInvite({ teamName }: { teamName: string }) {
           <StatusBadge status="EXPIRED" />
         </div>
       </div>
-      <Button variant="outline" className="w-full" asChild>
-        <Link href="/login">Back to sign in</Link>
-      </Button>
+      <Link
+        href="/login"
+        className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
+      >
+        Back to sign in
+      </Link>
     </div>
   );
 }
@@ -166,9 +176,12 @@ function AlreadyMemberInvite({ teamName }: { teamName: string }) {
           working.
         </p>
       </div>
-      <Button className="w-full" asChild>
-        <Link href="/dashboard">Go to dashboard</Link>
-      </Button>
+      <Link
+        href="/dashboard"
+        className={cn(buttonVariants({ size: "lg" }), "w-full")}
+      >
+        Go to dashboard
+      </Link>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -34,25 +35,29 @@ export function RoleSwitcher() {
   const active = ROLE_OPTIONS.find((option) => option.key === activeKey);
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 gap-2 border-dashed text-xs font-medium"
-        >
-          <FlaskConical
-            className="h-3.5 w-3.5 text-muted-foreground"
-            aria-hidden
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-2 border-dashed text-xs font-medium"
           />
-          <span className="text-muted-foreground">DEV: viewing as</span>
-          <span>{active?.label ?? "—"}</span>
-          <ChevronDown className="h-3 w-3 text-muted-foreground" aria-hidden />
-        </Button>
+        }
+      >
+        <FlaskConical
+          className="h-3.5 w-3.5 text-muted-foreground"
+          aria-hidden
+        />
+        <span className="text-muted-foreground">DEV: viewing as</span>
+        <span>{active?.label ?? "—"}</span>
+        <ChevronDown className="h-3 w-3 text-muted-foreground" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-          Preview role
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+            Preview role
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup
           value={activeKey}

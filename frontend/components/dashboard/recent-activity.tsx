@@ -57,7 +57,11 @@ export function RecentActivity() {
                     <span className="font-medium">{item.actorName}</span>{" "}
                     <span className="text-muted-foreground">{item.target}</span>
                   </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  {/* Relative time depends on Date.now() — hydration mismatch is expected and safe. */}
+                  <p
+                    className="mt-0.5 text-xs text-muted-foreground"
+                    suppressHydrationWarning
+                  >
                     {formatRelativeTime(item.timestamp)}
                   </p>
                 </div>
