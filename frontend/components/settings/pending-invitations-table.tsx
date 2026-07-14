@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
-import { pendingInvitations as seed } from "@/lib/mock-data";
 import { formatDate } from "@/lib/format";
 import type { Invitation, Membership, Role } from "@/types";
 
@@ -25,18 +24,28 @@ const roleLabel = (role: Role, personaType: Membership["personaType"]) => {
   return role.charAt(0) + role.slice(1).toLowerCase();
 };
 
-export function PendingInvitationsTable() {
-  const [items, setItems] = useState<Invitation[]>(seed);
+export function PendingInvitationsTable({
+  invitations,
+  onRevoke,
+}: {
+  invitations: Invitation[];
+  onRevoke: (id: string) => Promise<void>;
+}) {
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  const resend = (email: string) =>
-    toast.success(`Invitation resent to ${email}`);
-
-  const revoke = (id: string, email: string) => {
-    setItems((prev) => prev.filter((invite) => invite.id !== id));
-    toast.success(`Invitation to ${email} revoked`);
+  const handleRevoke = async (id: string, email: string) => {
+    setBusyId(id);
+    try {
+      await onRevoke(id);
+      toast.success(`Invitation to ${email} revoked`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to revoke");
+    } finally {
+      setBusyId(null);
+    }
   };
 
-  if (items.length === 0) {
+  if (invitations.length === 0) {
     return (
       <Card className="p-6">
         <EmptyState
@@ -61,7 +70,7 @@ export function PendingInvitationsTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {items.map((invite) => (
+          {invitations.map((invite) => (
             <TableRow key={invite.id}>
               <TableCell className="text-sm font-medium">
                 {invite.email}
@@ -76,22 +85,14 @@ export function PendingInvitationsTable() {
                 {formatDate(invite.expiresAt)}
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => resend(invite.email)}
-                  >
-                    Resend
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => revoke(invite.id, invite.email)}
-                  >
-                    Revoke
-                  </Button>
-                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busyId === invite.id}
+                  onClick={() => handleRevoke(invite.id, invite.email)}
+                >
+                  Revoke
+                </Button>
               </TableCell>
             </TableRow>
           ))}

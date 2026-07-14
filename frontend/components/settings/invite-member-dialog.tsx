@@ -22,19 +22,58 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ApiError, useApiClient } from "@/lib/api-client";
+import { useCurrentUser } from "@/lib/current-user";
+import type { Invitation, PersonaType, Role } from "@/types";
 
 type InviteRole = "ADMIN" | "MEMBER_CREATOR" | "MEMBER_LABEL_REP";
 
-export function InviteMemberDialog() {
+const toBackend = (
+  key: InviteRole,
+): { role: Role; personaType: PersonaType | null } => {
+  if (key === "ADMIN") return { role: "ADMIN", personaType: null };
+  if (key === "MEMBER_CREATOR")
+    return { role: "MEMBER", personaType: "CREATOR" };
+  return { role: "MEMBER", personaType: "LABEL_REP" };
+};
+
+export function InviteMemberDialog({
+  onInvited,
+}: {
+  onInvited: (invitation: Invitation) => void;
+}) {
+  const api = useApiClient();
+  const { activeTeamId } = useCurrentUser();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<InviteRole>("MEMBER_CREATOR");
+  const [pending, setPending] = useState(false);
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    toast.success(`Invitation sent to ${email}`);
-    setEmail("");
-    setOpen(false);
+    if (!activeTeamId) return;
+    setPending(true);
+    try {
+      const invitation = await api.post<Invitation>(
+        `/teams/${activeTeamId}/invitations`,
+        { email, ...toBackend(role) },
+      );
+      onInvited(invitation);
+      toast.success(`Invitation sent to ${email}`);
+      setEmail("");
+      setRole("MEMBER_CREATOR");
+      setOpen(false);
+    } catch (e) {
+      const msg =
+        e instanceof ApiError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Failed to invite";
+      toast.error(msg);
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -47,7 +86,7 @@ export function InviteMemberDialog() {
         <DialogHeader>
           <DialogTitle>Invite a member</DialogTitle>
           <DialogDescription>
-            They&apos;ll get an email with a one-time invitation link.
+            They&apos;ll get a one-time invitation link.
           </DialogDescription>
         </DialogHeader>
         <form className="space-y-4" onSubmit={submit}>
@@ -86,10 +125,13 @@ export function InviteMemberDialog() {
               type="button"
               variant="ghost"
               onClick={() => setOpen(false)}
+              disabled={pending}
             >
               Cancel
             </Button>
-            <Button type="submit">Send invitation</Button>
+            <Button type="submit" disabled={pending || !activeTeamId}>
+              {pending ? "Sending…" : "Send invitation"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

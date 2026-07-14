@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/status-badge";
-import { directoryUsers } from "@/lib/mock-data";
+import type { DirectoryEntry } from "@/components/users/user-table";
 import { formatDate } from "@/lib/format";
 import type { Membership, Role } from "@/types";
 
@@ -27,7 +27,7 @@ const roleLabel = (role: Role, personaType: Membership["personaType"]) => {
   return role.charAt(0) + role.slice(1).toLowerCase();
 };
 
-export function MemberList() {
+export function MemberList({ entries }: { entries: DirectoryEntry[] }) {
   return (
     <Card className="overflow-hidden p-0">
       <Table>
@@ -40,34 +40,45 @@ export function MemberList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {directoryUsers.map((entry) => (
-            <TableRow key={entry.id}>
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-brand/10 text-xs font-medium text-brand">
-                      {initials(entry.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{entry.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {entry.email}
-                    </p>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell className="text-sm">
-                {roleLabel(entry.role, entry.personaType)}
-              </TableCell>
-              <TableCell>
-                <StatusBadge status={entry.status} />
-              </TableCell>
-              <TableCell className="text-right text-sm text-muted-foreground">
-                {formatDate(entry.createdAt)}
+          {entries.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={4}
+                className="py-6 text-center text-sm text-muted-foreground"
+              >
+                No members yet.
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            entries.map((entry) => (
+              <TableRow key={entry.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-brand/10 text-xs font-medium text-brand">
+                        {initials(entry.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{entry.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {entry.email}
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="text-sm">
+                  {roleLabel(entry.role, entry.personaType)}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={entry.status} />
+                </TableCell>
+                <TableCell className="text-right text-sm text-muted-foreground">
+                  {formatDate(entry.createdAt)}
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </Card>
