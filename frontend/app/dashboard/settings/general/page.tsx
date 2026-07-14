@@ -5,6 +5,7 @@ import { ImageIcon, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { CreatorApplicationInline } from "@/components/dashboard/creator-application-inline";
+import { LabelApplicationInline } from "@/components/dashboard/label-application-inline";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,9 +42,12 @@ export default function SettingsGeneralPage() {
   const isAdmin =
     currentUser.membership.role === "OWNER" ||
     currentUser.membership.role === "ADMIN";
-  const isListener =
-    currentUser.membership.role === "MEMBER" &&
-    currentUser.membership.personaType === "LISTENER";
+  const persona = currentUser.membership.personaType;
+  const isMember = currentUser.membership.role === "MEMBER";
+  const isListener = isMember && persona === "LISTENER";
+  // Listeners and creators can both apply to become label owners.
+  const canApplyForLabel =
+    isMember && (persona === "LISTENER" || persona === "CREATOR");
 
   return (
     <div className="space-y-4">
@@ -58,6 +62,7 @@ export default function SettingsGeneralPage() {
       />
 
       {isListener ? <CreatorApplicationInline /> : null}
+      {canApplyForLabel ? <LabelApplicationInline /> : null}
 
       {isAdmin ? <WorkspaceCard /> : null}
       {isAdmin ? <LogoCard /> : null}

@@ -27,6 +27,65 @@ export interface CreatorApplicationRow extends CreatorApplication {
   reviewerName: string | null;
 }
 
+export interface LabelApplication {
+  id: string;
+  userId: string;
+  teamId: string;
+  labelName: string | null;
+  message: string | null;
+  status: ApplicationStatus;
+  reviewerId: string | null;
+  reviewerNote: string | null;
+  createdAt: string;
+  decidedAt: string | null;
+}
+
+export interface LabelApplicationRow extends LabelApplication {
+  applicantName: string;
+  applicantEmail: string;
+  reviewerName: string | null;
+}
+
+export interface RosterArtist {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  approvedTrackCount: number;
+  totalPlays: number;
+  earningsUsd: number;
+}
+
+export interface LabelOutgoingInvite {
+  id: string;
+  artistUserId: string;
+  artistName: string;
+  artistEmail: string;
+  status: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED";
+  createdAt: string;
+}
+
+export interface LabelIncomingInvite {
+  id: string;
+  labelUserId: string;
+  labelName: string;
+  createdAt: string;
+}
+
+export interface LabelStats {
+  artistCount: number;
+  totalPlays: number;
+  earningsUsd: number;
+  topTracks: Array<{
+    id: string;
+    title: string;
+    genre: string;
+    playCount: number;
+    artistName: string;
+    earningsUsd: number;
+  }>;
+}
+
 export interface PlaylistSummary {
   id: string;
   name: string;

@@ -1,9 +1,21 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthedRequest } from '../auth/request-user.type';
 import { CreatorApplicationsService } from '../creator-applications/creator-applications.service';
 import { SubmitApplicationDto } from '../creator-applications/dto/submit-application.dto';
+import { InviteArtistDto } from '../labels/dto/invite-artist.dto';
+import { SubmitLabelApplicationDto } from '../labels/dto/submit-label-application.dto';
+import { LabelsService } from '../labels/labels.service';
 import { CreatePlaylistDto } from '../playlists/dto/create-playlist.dto';
 import { PlaylistsService } from '../playlists/playlists.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -18,6 +30,7 @@ export class MeController {
     private readonly prisma: PrismaService,
     private readonly creatorApplications: CreatorApplicationsService,
     private readonly playlists: PlaylistsService,
+    private readonly labels: LabelsService,
   ) {}
 
   @Get()
@@ -77,5 +90,96 @@ export class MeController {
     @CurrentUser() authUser: Authed,
   ) {
     return this.playlists.respondToInvite(id, authUser.user.id, 'DECLINED');
+  }
+
+  // ---- Label application (any user) ----
+
+  @Get('label-application')
+  getMyLabelApplication(@CurrentUser() authUser: Authed) {
+    return this.labels.myApplication(authUser.user.id);
+  }
+
+  @Post('label-application')
+  submitLabelApplication(
+    @CurrentUser() authUser: Authed,
+    @Body() dto: SubmitLabelApplicationDto,
+  ) {
+    return this.labels.submitApplication(
+      authUser.user.id,
+      dto.labelName,
+      dto.message,
+    );
+  }
+
+  // ---- Artist side: incoming label invites ----
+
+  @Get('label-invites')
+  listLabelInvites(@CurrentUser() authUser: Authed) {
+    return this.labels.listMyIncomingInvites(authUser.user.id);
+  }
+
+  @Post('label-invites/:id/accept')
+  acceptLabelInvite(
+    @Param('id') id: string,
+    @CurrentUser() authUser: Authed,
+  ) {
+    return this.labels.respondToIncomingInvite(id, authUser.user.id, 'ACCEPTED');
+  }
+
+  @Post('label-invites/:id/decline')
+  declineLabelInvite(
+    @Param('id') id: string,
+    @CurrentUser() authUser: Authed,
+  ) {
+    return this.labels.respondToIncomingInvite(id, authUser.user.id, 'DECLINED');
+  }
+
+  @Post('label/leave')
+  @HttpCode(204)
+  leaveLabel(@CurrentUser() authUser: Authed) {
+    return this.labels.leaveLabel(authUser.user.id);
+  }
+
+  // ---- Label owner side: roster, invites, stats ----
+
+  @Get('label/stats')
+  labelStats(@CurrentUser() authUser: Authed) {
+    return this.labels.labelStats(authUser.user.id);
+  }
+
+  @Get('label/roster')
+  labelRoster(@CurrentUser() authUser: Authed) {
+    return this.labels.listRoster(authUser.user.id);
+  }
+
+  @Delete('label/roster/:artistId')
+  @HttpCode(204)
+  removeFromRoster(
+    @Param('artistId') artistId: string,
+    @CurrentUser() authUser: Authed,
+  ) {
+    return this.labels.removeArtistFromRoster(authUser.user.id, artistId);
+  }
+
+  @Get('label/invites')
+  listLabelOutgoingInvites(@CurrentUser() authUser: Authed) {
+    return this.labels.listMyOutgoingInvites(authUser.user.id);
+  }
+
+  @Post('label/invites')
+  createLabelInvite(
+    @CurrentUser() authUser: Authed,
+    @Body() dto: InviteArtistDto,
+  ) {
+    return this.labels.inviteArtistByEmail(authUser.user.id, dto.email);
+  }
+
+  @Delete('label/invites/:id')
+  @HttpCode(204)
+  revokeLabelInvite(
+    @Param('id') id: string,
+    @CurrentUser() authUser: Authed,
+  ) {
+    return this.labels.revokeOutgoingInvite(authUser.user.id, id);
   }
 }

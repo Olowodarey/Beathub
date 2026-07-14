@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  Briefcase,
   Headphones,
   LayoutDashboard,
   ListMusic,
@@ -39,6 +40,19 @@ export const navItems: NavItem[] = [
     href: "/dashboard/creator-applications",
     icon: ShieldCheck,
     roles: ["OWNER", "ADMIN"],
+  },
+  {
+    label: "Label applications",
+    href: "/dashboard/label-applications",
+    icon: Briefcase,
+    roles: ["OWNER", "ADMIN"],
+  },
+  {
+    label: "Roster",
+    href: "/dashboard/roster",
+    icon: Briefcase,
+    // Only MEMBERs with LABEL_REP persona see this.
+    personas: ["LABEL_REP"],
   },
   {
     label: "Content",

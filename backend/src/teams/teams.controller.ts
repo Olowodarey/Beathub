@@ -23,6 +23,8 @@ import { ContentService } from '../content/content.service';
 import { CreateContentDto } from '../content/dto/create-content.dto';
 import { CreatorApplicationsService } from '../creator-applications/creator-applications.service';
 import { DecideApplicationDto } from '../creator-applications/dto/decide-application.dto';
+import { DecideLabelApplicationDto } from '../labels/dto/decide-label-application.dto';
+import { LabelsService } from '../labels/labels.service';
 import { InvitationsService } from '../invitations/invitations.service';
 import { AnalyticsService } from './analytics.service';
 import { DashboardService } from './dashboard.service';
@@ -42,6 +44,7 @@ export class TeamsController {
     private readonly analytics: AnalyticsService,
     private readonly content: ContentService,
     private readonly creatorApplications: CreatorApplicationsService,
+    private readonly labels: LabelsService,
   ) {}
 
   @Get('dashboard')
@@ -164,6 +167,32 @@ export class TeamsController {
     @Body() dto: DecideApplicationDto,
   ) {
     return this.creatorApplications.decide(
+      teamId,
+      id,
+      authUser.user.id,
+      dto.status,
+      dto.reviewerNote,
+    );
+  }
+
+  @Get('label-applications')
+  @Roles('OWNER', 'ADMIN')
+  listLabelApplications(
+    @Param('teamId') teamId: string,
+    @Query('status') status?: ApplicationStatus,
+  ) {
+    return this.labels.listApplicationsForTeam(teamId, status);
+  }
+
+  @Post('label-applications/:id/decision')
+  @Roles('OWNER', 'ADMIN')
+  decideLabelApplication(
+    @Param('teamId') teamId: string,
+    @Param('id') id: string,
+    @CurrentUser() authUser: Authed,
+    @Body() dto: DecideLabelApplicationDto,
+  ) {
+    return this.labels.decideApplication(
       teamId,
       id,
       authUser.user.id,

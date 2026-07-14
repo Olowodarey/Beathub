@@ -6,6 +6,8 @@ import { RevenueBarChart } from "@/components/charts/revenue-bar-chart";
 import { PlatformDonut } from "@/components/charts/platform-donut";
 import { UserGrowthChart } from "@/components/charts/user-growth-chart";
 import { AdRevenueWidget } from "@/components/dashboard/ad-revenue-widget";
+import { CreatorHome } from "@/components/dashboard/creator-home";
+import { LabelHome } from "@/components/dashboard/label-home";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -29,13 +31,20 @@ export default function DashboardOverview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const membershipRole = currentUser?.membership.role ?? null;
   const membershipPersona = currentUser?.membership.personaType ?? null;
   const isListenerRole =
-    currentUser?.membership.role === "MEMBER" &&
-    membershipPersona === "LISTENER";
+    membershipRole === "MEMBER" && membershipPersona === "LISTENER";
+  const isCreatorRole =
+    membershipRole === "MEMBER" && membershipPersona === "CREATOR";
+  const isLabelRole =
+    membershipRole === "MEMBER" && membershipPersona === "LABEL_REP";
+  // The listener/creator/label homes fetch their own data — the admin dashboard
+  // endpoints aren't relevant for them.
+  const skipAdminFetch = isListenerRole || isCreatorRole || isLabelRole;
 
   useEffect(() => {
-    if (!activeTeamId || isListenerRole) {
+    if (!activeTeamId || skipAdminFetch) {
       setLoading(false);
       return;
     }
@@ -56,7 +65,7 @@ export default function DashboardOverview() {
     return () => {
       cancelled = true;
     };
-  }, [activeTeamId, api, isListenerRole]);
+  }, [activeTeamId, api, skipAdminFetch]);
 
   if (userLoading || (!currentUser && !userError)) {
     return <PageMessage>Loading…</PageMessage>;
@@ -72,6 +81,7 @@ export default function DashboardOverview() {
   const { role, personaType } = currentUser.membership;
   const isCreator = role === "MEMBER" && personaType === "CREATOR";
   const isListener = role === "MEMBER" && personaType === "LISTENER";
+  const isLabel = role === "MEMBER" && personaType === "LABEL_REP";
   const firstName = currentUser.user.name.split(" ")[0];
   const stats = dashboard?.stats;
 
@@ -79,16 +89,27 @@ export default function DashboardOverview() {
     return <ListenerHome teamId={activeTeamId} firstName={firstName} />;
   }
 
+  if (isCreator && activeTeamId) {
+    return (
+      <CreatorHome
+        teamId={activeTeamId}
+        userId={currentUser.user.id}
+        firstName={firstName}
+      />
+    );
+  }
+
+  if (isLabel) {
+    return <LabelHome firstName={firstName} />;
+  }
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {isCreator ? "Your dashboard" : "Overview"}
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {isCreator
-            ? `Welcome back, ${firstName}. Here's how your catalog is doing.`
-            : `Welcome back, ${firstName}. Here's what's happening across ${currentUser.team.name}.`}
+          Welcome back, {firstName}. Here&apos;s what&apos;s happening across{" "}
+          {currentUser.team.name}.
         </p>
       </div>
 
@@ -99,89 +120,43 @@ export default function DashboardOverview() {
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {isCreator ? (
-          <>
-            <StatCard
-              label="Plays"
-              value={
-                loading || !dashboard
-                  ? "—"
-                  : formatCompactNumber(dashboard.viewer.plays)
-              }
-              icon={Play}
-              hint="Across your approved tracks"
-            />
-            <StatCard
-              label="Estimated earnings"
-              value={
-                loading || !dashboard
-                  ? "—"
-                  : formatCurrency(dashboard.viewer.earningsUsd)
-              }
-              icon={DollarSign}
-              hint="$0.004 per play"
-            />
-            <StatCard
-              label="Uploads"
-              value={
-                loading || !dashboard
-                  ? "—"
-                  : formatCompactNumber(dashboard.viewer.uploadCount)
-              }
-              icon={Music2}
-            />
-            <StatCard
-              label="Team library plays"
-              value={
-                loading || !stats ? "—" : formatCompactNumber(stats.totalPlays)
-              }
-              icon={Sparkles}
-              hint={
-                stats
-                  ? `${formatCurrency(stats.totalRevenueUsd)} paid out`
-                  : undefined
-              }
-            />
-          </>
-        ) : (
-          <>
-            <StatCard
-              label="Total users"
-              value={loading || !stats ? "—" : formatCompactNumber(stats.totalUsers)}
-              icon={Users}
-            />
-            <StatCard
-              label="Total plays"
-              value={
-                loading || !stats ? "—" : formatCompactNumber(stats.totalPlays)
-              }
-              icon={Play}
-              hint={
-                stats
-                  ? `${formatCompactNumber(stats.activeCreators)} active creators`
-                  : undefined
-              }
-            />
-            <StatCard
-              label="Creator payouts"
-              value={
-                loading || !stats ? "—" : formatCurrency(stats.totalRevenueUsd)
-              }
-              icon={DollarSign}
-              hint="$0.004 per play"
-            />
-            <StatCard
-              label="Content uploads"
-              value={
-                loading || !stats
-                  ? "—"
-                  : formatCompactNumber(stats.contentUploadsThisWeek)
-              }
-              icon={Music2}
-              hint="This week"
-            />
-          </>
-        )}
+        <>
+          <StatCard
+            label="Total users"
+            value={loading || !stats ? "—" : formatCompactNumber(stats.totalUsers)}
+            icon={Users}
+          />
+          <StatCard
+            label="Total plays"
+            value={
+              loading || !stats ? "—" : formatCompactNumber(stats.totalPlays)
+            }
+            icon={Play}
+            hint={
+              stats
+                ? `${formatCompactNumber(stats.activeCreators)} active creators`
+                : undefined
+            }
+          />
+          <StatCard
+            label="Creator payouts"
+            value={
+              loading || !stats ? "—" : formatCurrency(stats.totalRevenueUsd)
+            }
+            icon={DollarSign}
+            hint="$0.004 per play"
+          />
+          <StatCard
+            label="Content uploads"
+            value={
+              loading || !stats
+                ? "—"
+                : formatCompactNumber(stats.contentUploadsThisWeek)
+            }
+            icon={Music2}
+            hint="This week"
+          />
+        </>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

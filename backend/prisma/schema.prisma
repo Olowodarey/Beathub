@@ -34,6 +34,13 @@ enum PlaylistInviteStatus {
   REVOKED
 }
 
+enum LabelInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+}
+
 enum UserStatus {
   ACTIVE
   INVITED
@@ -73,13 +80,14 @@ enum CampaignStatus {
 }
 
 model User {
-  id        String     @id @default(cuid())
-  clerkId   String     @unique
-  email     String     @unique
-  name      String?
-  avatarUrl String?
-  status    UserStatus @default(ACTIVE)
-  createdAt DateTime   @default(now())
+  id             String     @id @default(cuid())
+  clerkId        String     @unique
+  email          String     @unique
+  name           String?
+  avatarUrl      String?
+  status         UserStatus @default(ACTIVE)
+  createdAt      DateTime   @default(now())
+  signedLabelId  String?
 
   memberships          Membership[]
   uploadedContent      Content[]            @relation("ContentUploader")
@@ -93,6 +101,14 @@ model User {
   playlistTracksAdded  PlaylistTrack[]      @relation("PlaylistTrackAdder")
   playlistInvitesSent  PlaylistInvite[]     @relation("PlaylistInviteInviter")
   playlistInvitesGot   PlaylistInvite[]     @relation("PlaylistInviteInvitee")
+  labelApplications    LabelApplication[]   @relation("LabelApplicant")
+  labelAppsReviewed    LabelApplication[]   @relation("LabelApplicationReviewer")
+  labelInvitesSent     LabelInvite[]        @relation("LabelInviter")
+  labelInvitesGot      LabelInvite[]        @relation("LabelInvitee")
+  signedLabel          User?                @relation("LabelRoster", fields: [signedLabelId], references: [id], onDelete: SetNull)
+  signedArtists        User[]               @relation("LabelRoster")
+
+  @@index([signedLabelId])
 }
 
 model Team {
@@ -107,6 +123,7 @@ model Team {
   campaigns           AdCampaign[]
   content             Content[]
   creatorApplications CreatorApplication[]
+  labelApplications   LabelApplication[]
 }
 
 model Membership {
@@ -225,6 +242,41 @@ model PlaylistMember {
 
   @@unique([playlistId, userId])
   @@index([userId])
+}
+
+model LabelApplication {
+  id           String            @id @default(cuid())
+  userId       String
+  teamId       String
+  labelName    String?
+  message      String?
+  status       ApplicationStatus @default(PENDING)
+  reviewerId   String?
+  reviewerNote String?
+  createdAt    DateTime          @default(now())
+  decidedAt    DateTime?
+
+  user     User  @relation("LabelApplicant", fields: [userId], references: [id], onDelete: Cascade)
+  team     Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("LabelApplicationReviewer", fields: [reviewerId], references: [id])
+
+  @@index([teamId, status])
+  @@index([userId])
+}
+
+model LabelInvite {
+  id           String            @id @default(cuid())
+  labelUserId  String
+  artistUserId String
+  status       LabelInviteStatus @default(PENDING)
+  createdAt    DateTime          @default(now())
+  decidedAt    DateTime?
+
+  label  User @relation("LabelInviter", fields: [labelUserId], references: [id], onDelete: Cascade)
+  artist User @relation("LabelInvitee", fields: [artistUserId], references: [id], onDelete: Cascade)
+
+  @@index([artistUserId, status])
+  @@index([labelUserId, status])
 }
 
 model CreatorApplication {
