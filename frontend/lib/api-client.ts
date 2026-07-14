@@ -53,6 +53,7 @@ export interface ApiClient {
   post: <T>(path: string, body?: unknown) => Promise<T>;
   patch: <T>(path: string, body?: unknown) => Promise<T>;
   delete: <T = void>(path: string) => Promise<T>;
+  upload: <T>(path: string, form: FormData) => Promise<T>;
 }
 
 export function useApiClient(): ApiClient {
@@ -62,6 +63,29 @@ export function useApiClient(): ApiClient {
     async <T>(path: string, init: RequestInit = {}): Promise<T> => {
       const token = await getToken();
       return doFetch<T>(path, init, token);
+    },
+    [getToken],
+  );
+
+  const uploadRequest = useCallback(
+    async <T>(path: string, form: FormData): Promise<T> => {
+      const token = await getToken();
+      const res = await fetch(`${BASE}${path}`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: form,
+      });
+      if (!res.ok) {
+        let body: unknown;
+        try {
+          body = await res.json();
+        } catch {}
+        const msg =
+          (body as { message?: string } | undefined)?.message ?? res.statusText;
+        throw new ApiError(res.status, msg, body);
+      }
+      if (res.status === 204) return undefined as T;
+      return res.json() as Promise<T>;
     },
     [getToken],
   );
@@ -80,7 +104,8 @@ export function useApiClient(): ApiClient {
           body: body === undefined ? undefined : JSON.stringify(body),
         }),
       delete: (path) => request(path, { method: "DELETE" }),
+      upload: (path, form) => uploadRequest(path, form),
     }),
-    [request],
+    [request, uploadRequest],
   );
 }

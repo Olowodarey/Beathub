@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  Headphones,
   LayoutDashboard,
   Megaphone,
   Music2,
@@ -35,7 +36,11 @@ export const navItems: NavItem[] = [
     label: "Content",
     href: "/dashboard/content",
     icon: Music2,
-    roles: ["OWNER", "ADMIN"],
+  },
+  {
+    label: "Library",
+    href: "/dashboard/library",
+    icon: Headphones,
   },
   {
     label: "Analytics",

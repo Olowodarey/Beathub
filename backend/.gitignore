@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+# Local uploads (audio files)
+/uploads
+
 # Logs
 logs
 *.log

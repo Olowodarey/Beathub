@@ -31,10 +31,16 @@ export interface DashboardResponse {
     totalUsers: number;
     totalCreators: number;
     activeCreators: number;
+    totalPlays: number;
     totalRevenueUsd: number;
     contentUploadsThisWeek: number;
     adRevenueUsd: number;
     adRevenueTrendPct: number;
+  };
+  viewer: {
+    plays: number;
+    earningsUsd: number;
+    uploadCount: number;
   };
   recentActivity: ActivityItem[];
 }

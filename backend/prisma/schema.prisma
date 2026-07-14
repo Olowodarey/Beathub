@@ -131,6 +131,10 @@ model Content {
   durationSeconds Int
   genre           String
   status          ContentStatus @default(PENDING)
+  audioUrl        String?
+  audioMimeType   String?
+  fileSizeBytes   Int?
+  playCount       Int           @default(0)
   createdAt       DateTime      @default(now())
 
   team     Team @relation(fields: [teamId], references: [id], onDelete: Cascade)

@@ -64,6 +64,8 @@ export interface ContentItem {
   uploadedAt: string;
   status: ContentStatus;
   genre: string;
+  audioUrl: string | null;
+  playCount: number;
 }
 
 // Ad marketplace

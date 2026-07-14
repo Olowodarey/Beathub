@@ -7,14 +7,19 @@ import {
   Param,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ContentStatus, InvitationStatus } from '@prisma/client';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import type { AuthedRequest } from '../auth/request-user.type';
+import { ContentService } from '../content/content.service';
+import { CreateContentDto } from '../content/dto/create-content.dto';
 import { InvitationsService } from '../invitations/invitations.service';
 import { AnalyticsService } from './analytics.service';
 import { DashboardService } from './dashboard.service';
@@ -32,12 +37,16 @@ export class TeamsController {
     private readonly invitations: InvitationsService,
     private readonly dashboard: DashboardService,
     private readonly analytics: AnalyticsService,
+    private readonly content: ContentService,
   ) {}
 
   @Get('dashboard')
   @Roles()
-  getDashboard(@Param('teamId') teamId: string) {
-    return this.dashboard.getDashboard(teamId);
+  getDashboard(
+    @Param('teamId') teamId: string,
+    @CurrentUser() authUser: Authed,
+  ) {
+    return this.dashboard.getDashboard(teamId, authUser.user.id);
   }
 
   @Get('analytics')
@@ -88,6 +97,24 @@ export class TeamsController {
     @Query('status') status?: ContentStatus,
   ) {
     return this.teams.listContent(teamId, status);
+  }
+
+  @Post('content')
+  @Roles()
+  @UseInterceptors(FileInterceptor('audio', { limits: { fileSize: 25 * 1024 * 1024 } }))
+  uploadContent(
+    @Param('teamId') teamId: string,
+    @CurrentUser() authUser: Authed,
+    @Body() dto: CreateContentDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.content.uploadForTeam(teamId, authUser.user.id, dto, file);
+  }
+
+  @Get('library')
+  @Roles()
+  listLibrary(@Param('teamId') teamId: string) {
+    return this.content.listLibrary(teamId);
   }
 
   @Get('campaigns')

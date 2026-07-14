@@ -56,6 +56,8 @@ export const mapContent = (c: Content & { uploader: User }) => ({
   uploadedAt: c.createdAt.toISOString(),
   status: c.status,
   genre: c.genre,
+  audioUrl: c.audioUrl,
+  playCount: c.playCount,
 });
 
 export const mapCampaign = (c: AdCampaign & { requester: User }) => ({

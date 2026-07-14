@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DollarSign, Music2, Sparkles, Users } from "lucide-react";
+import { DollarSign, Music2, Play, Sparkles, Users } from "lucide-react";
 import { RevenueBarChart } from "@/components/charts/revenue-bar-chart";
 import { PlatformDonut } from "@/components/charts/platform-donut";
 import { UserGrowthChart } from "@/components/charts/user-growth-chart";
@@ -88,14 +88,46 @@ export default function DashboardOverview() {
         {isCreator ? (
           <>
             <StatCard
-              label="Streams (30d)"
-              value="—"
-              icon={Sparkles}
-              hint="Per-creator stats coming soon"
+              label="Plays"
+              value={
+                loading || !dashboard
+                  ? "—"
+                  : formatCompactNumber(dashboard.viewer.plays)
+              }
+              icon={Play}
+              hint="Across your approved tracks"
             />
-            <StatCard label="Followers" value="—" icon={Users} />
-            <StatCard label="Revenue share" value="—" icon={DollarSign} />
-            <StatCard label="Uploads" value="—" icon={Music2} />
+            <StatCard
+              label="Estimated earnings"
+              value={
+                loading || !dashboard
+                  ? "—"
+                  : formatCurrency(dashboard.viewer.earningsUsd)
+              }
+              icon={DollarSign}
+              hint="$0.004 per play"
+            />
+            <StatCard
+              label="Uploads"
+              value={
+                loading || !dashboard
+                  ? "—"
+                  : formatCompactNumber(dashboard.viewer.uploadCount)
+              }
+              icon={Music2}
+            />
+            <StatCard
+              label="Team library plays"
+              value={
+                loading || !stats ? "—" : formatCompactNumber(stats.totalPlays)
+              }
+              icon={Sparkles}
+              hint={
+                stats
+                  ? `${formatCurrency(stats.totalRevenueUsd)} paid out`
+                  : undefined
+              }
+            />
           </>
         ) : (
           <>
@@ -105,25 +137,24 @@ export default function DashboardOverview() {
               icon={Users}
             />
             <StatCard
-              label="Active creators"
+              label="Total plays"
               value={
-                loading || !stats
-                  ? "—"
-                  : formatCompactNumber(stats.activeCreators)
+                loading || !stats ? "—" : formatCompactNumber(stats.totalPlays)
               }
-              icon={Sparkles}
+              icon={Play}
               hint={
                 stats
-                  ? `${formatCompactNumber(stats.totalCreators)} total`
+                  ? `${formatCompactNumber(stats.activeCreators)} active creators`
                   : undefined
               }
             />
             <StatCard
-              label="Total revenue"
+              label="Creator payouts"
               value={
                 loading || !stats ? "—" : formatCurrency(stats.totalRevenueUsd)
               }
               icon={DollarSign}
+              hint="$0.004 per play"
             />
             <StatCard
               label="Content uploads"
