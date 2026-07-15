@@ -19,11 +19,13 @@
 
 ## 📸 Screenshots
 
-> _Add your own captures here — the login/welcome screen and a couple of dashboard views show the project off best._
+**Welcome screen** — split-screen sign-in with a branded music panel and email/password + Google auth.
 
-| Welcome screen | Dashboard |
-| --- | --- |
-| `./docs/login.png` | `./docs/dashboard.png` |
+![Beathub welcome screen: branded panel on the left with a gradient headline and feature list, sign-in form on the right](image-1.png)
+
+**Dashboard** — pure-dark overview with stat tiles, user-growth and revenue charts, and analytics.
+
+![Beathub dashboard overview: sidebar navigation, KPI cards, and area charts](image.png)
 
 ---
 
