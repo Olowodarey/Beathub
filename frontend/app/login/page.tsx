@@ -12,6 +12,14 @@ import { Label } from "@/components/ui/label";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
+const PASSWORD_RULES: { label: string; test: (v: string) => boolean }[] = [
+  { label: "At least 8 characters", test: (v) => v.length >= 8 },
+  { label: "An uppercase letter", test: (v) => /[A-Z]/.test(v) },
+  { label: "A lowercase letter", test: (v) => /[a-z]/.test(v) },
+  { label: "A number", test: (v) => /\d/.test(v) },
+  { label: "A special character", test: (v) => /[^A-Za-z0-9]/.test(v) },
+];
+
 interface GoogleCredentialResponse {
   credential?: string;
 }
@@ -53,6 +61,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement>(null);
+
+  const passwordChecks = PASSWORD_RULES.map((rule) => ({
+    label: rule.label,
+    passed: rule.test(password),
+  }));
+  const passwordValid = passwordChecks.every((c) => c.passed);
+  const submitDisabled = pending || (mode === "signup" && !passwordValid);
 
   // Already signed in → skip the login screen.
   useEffect(() => {
@@ -182,7 +197,24 @@ export default function LoginPage() {
                   placeholder="••••••••"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={pending}>
+              {mode === "signup" ? (
+                <ul className="space-y-1 pt-1">
+                  {passwordChecks.map((check) => (
+                    <li
+                      key={check.label}
+                      className={`flex items-center gap-1.5 text-xs ${
+                        check.passed
+                          ? "text-emerald-500"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      <span aria-hidden>{check.passed ? "✓" : "○"}</span>
+                      {check.label}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <Button type="submit" className="w-full" disabled={submitDisabled}>
                 {pending
                   ? "Please wait…"
                   : mode === "signup"
