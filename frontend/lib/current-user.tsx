@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/lib/auth";
 import { useApiClient } from "@/lib/api-client";
 import type { MeResponse } from "@/lib/api-types";
 import type { CurrentUser, Membership, Team } from "@/types";

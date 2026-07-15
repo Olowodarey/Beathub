@@ -3,7 +3,7 @@
  *
  * Each iTunes track has a ~30s preview MP3. This script:
  *   1. Looks up the default team
- *   2. Ensures a synthetic User per artist (upserted on a stable clerkId)
+ *   2. Ensures a synthetic User per artist (upserted on a stable email)
  *   3. Downloads each preview into backend/uploads/<contentId>
  *   4. Inserts an APPROVED Content row so the track appears in Library immediately
  *
@@ -143,13 +143,11 @@ async function seedTrack(
   bucket: SearchBucket,
 ): Promise<'inserted' | 'skipped'> {
   const artistSlug = slugify(track.artistName);
-  const artistClerkId = `itunes:${artistSlug}`;
   const artistEmail = `${artistSlug}@itunes.beathub.local`;
 
   const artist = await prisma.user.upsert({
-    where: { clerkId: artistClerkId },
+    where: { email: artistEmail },
     create: {
-      clerkId: artistClerkId,
       email: artistEmail,
       name: track.artistName,
     },

@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ImageIcon, User as UserIcon } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import { useClerk, useUser } from "@clerk/nextjs";
 import { CreatorApplicationInline } from "@/components/dashboard/creator-application-inline";
 import { LabelApplicationInline } from "@/components/dashboard/label-application-inline";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,7 +32,6 @@ const initials = (name: string) =>
 
 export default function SettingsGeneralPage() {
   const { currentUser } = useCurrentUser();
-  const { user: clerkUser } = useUser();
 
   if (!currentUser) {
     return <p className="text-sm text-muted-foreground">Loading…</p>;
@@ -58,7 +56,7 @@ export default function SettingsGeneralPage() {
           currentUser.membership.role,
           currentUser.membership.personaType,
         )}
-        avatarUrl={clerkUser?.imageUrl ?? currentUser.user.avatarUrl ?? null}
+        avatarUrl={currentUser.user.avatarUrl ?? null}
       />
 
       {isListener ? <CreatorApplicationInline /> : null}
@@ -106,25 +104,9 @@ function ProfileCard({
               </p>
             </div>
           </div>
-          <ManageAccountButton />
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function ManageAccountButton() {
-  const { openUserProfile } = useClerk();
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      className="w-full shrink-0 sm:w-auto"
-      onClick={() => openUserProfile()}
-    >
-      <UserIcon className="mr-2 h-4 w-4" />
-      Manage account
-    </Button>
   );
 }
 

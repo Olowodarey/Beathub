@@ -9,7 +9,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthedRequest } from '../auth/request-user.type';
 import { AddMemberDto } from './dto/add-member.dto';
@@ -20,7 +20,7 @@ import { PlaylistsService } from './playlists.service';
 type Authed = NonNullable<AuthedRequest['authUser']>;
 
 @Controller('playlists')
-@UseGuards(ClerkAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class PlaylistsController {
   constructor(private readonly playlists: PlaylistsService) {}
 

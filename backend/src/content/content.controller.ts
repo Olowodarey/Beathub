@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthedRequest } from '../auth/request-user.type';
 import { ContentService } from './content.service';
@@ -24,7 +24,7 @@ export class ContentController {
   constructor(private readonly content: ContentService) {}
 
   @Patch(':id/status')
-  @UseGuards(ClerkAuthGuard)
+  @UseGuards(JwtAuthGuard)
   updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateContentStatusDto,
@@ -46,7 +46,7 @@ export class ContentController {
 
   @Post(':id/play')
   @HttpCode(200)
-  @UseGuards(ClerkAuthGuard)
+  @UseGuards(JwtAuthGuard)
   recordPlay(@Param('id') id: string) {
     return this.content.recordPlay(id);
   }

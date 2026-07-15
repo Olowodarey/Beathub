@@ -1,6 +1,11 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { PlayerBar } from "@/components/library/player-bar";
+import { useAuth } from "@/lib/auth";
 import { PlayerProvider } from "@/lib/player";
 
 export default function DashboardLayout({
@@ -8,6 +13,18 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) router.replace("/login");
+  }, [isLoaded, isSignedIn, router]);
+
+  // Avoid flashing the dashboard before the auth check resolves.
+  if (!isLoaded || !isSignedIn) {
+    return null;
+  }
+
   return (
     <PlayerProvider>
       <div className="flex min-h-svh">

@@ -8,7 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthedRequest } from '../auth/request-user.type';
 import { CreatorApplicationsService } from '../creator-applications/creator-applications.service';
@@ -24,7 +24,7 @@ import { mapMembership, mapTeam, mapUser } from '../common/mappers';
 type Authed = NonNullable<AuthedRequest['authUser']>;
 
 @Controller('me')
-@UseGuards(ClerkAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class MeController {
   constructor(
     private readonly prisma: PrismaService,

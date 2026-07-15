@@ -5,13 +5,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ClerkService } from './clerk.service';
+import { TokenService } from './token.service';
 import type { AuthedRequest } from './request-user.type';
 
 @Injectable()
-export class ClerkAuthGuard implements CanActivate {
+export class JwtAuthGuard implements CanActivate {
   constructor(
-    private readonly clerk: ClerkService,
+    private readonly tokens: TokenService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -20,16 +20,16 @@ export class ClerkAuthGuard implements CanActivate {
     const token = this.extractToken(req);
     if (!token) throw new UnauthorizedException('Missing bearer token');
 
-    let clerkUserId: string;
+    let userId: string;
     try {
-      const payload = await this.clerk.verifySessionToken(token);
-      if (!payload.sub) throw new Error('token has no sub');
-      clerkUserId = payload.sub;
+      userId = this.tokens.verify(token).sub;
     } catch {
       throw new UnauthorizedException('Invalid session token');
     }
 
-    const user = await this.getOrCreateUser(clerkUserId);
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('Account no longer exists');
+
     await this.ensureDefaultMembership(user.id);
     const memberships = await this.prisma.membership.findMany({
       where: { userId: user.id },
@@ -60,8 +60,7 @@ export class ClerkAuthGuard implements CanActivate {
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     const ownerEmail = process.env.OWNER_EMAIL?.toLowerCase();
-    const isOwner =
-      !!ownerEmail && user?.email.toLowerCase() === ownerEmail;
+    const isOwner = !!ownerEmail && user?.email.toLowerCase() === ownerEmail;
 
     await this.prisma.membership.create({
       data: {
@@ -79,35 +78,5 @@ export class ClerkAuthGuard implements CanActivate {
     const [scheme, value] = header.split(' ');
     if (scheme?.toLowerCase() !== 'bearer' || !value) return null;
     return value;
-  }
-
-  private async getOrCreateUser(clerkUserId: string) {
-    const existing = await this.prisma.user.findUnique({
-      where: { clerkId: clerkUserId },
-    });
-    if (existing) return existing;
-
-    const clerkUser = await this.clerk.getClerkUser(clerkUserId);
-    const primaryEmail =
-      clerkUser.emailAddresses.find(
-        (e) => e.id === clerkUser.primaryEmailAddressId,
-      )?.emailAddress ?? clerkUser.emailAddresses[0]?.emailAddress;
-
-    if (!primaryEmail) {
-      throw new UnauthorizedException('Clerk user has no email address');
-    }
-
-    const name =
-      [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') ||
-      null;
-
-    return this.prisma.user.create({
-      data: {
-        clerkId: clerkUserId,
-        email: primaryEmail,
-        name,
-        avatarUrl: clerkUser.imageUrl ?? null,
-      },
-    });
   }
 }

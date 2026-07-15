@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthedRequest } from '../auth/request-user.type';
 import { InvitationsService } from './invitations.service';
@@ -16,7 +16,7 @@ export class InvitationsController {
   }
 
   @Post(':token/accept')
-  @UseGuards(ClerkAuthGuard)
+  @UseGuards(JwtAuthGuard)
   accept(@Param('token') token: string, @CurrentUser() authUser: Authed) {
     return this.invitations.accept(token, authUser.user.id);
   }

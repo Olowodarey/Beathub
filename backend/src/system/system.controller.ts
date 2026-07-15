@@ -1,9 +1,9 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SystemService } from './system.service';
 
 @Controller('system')
-@UseGuards(ClerkAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class SystemController {
   constructor(private readonly system: SystemService) {}
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { LogOut, Search } from "lucide-react";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,8 +41,13 @@ const initials = (name: string) =>
 export function Header() {
   const { open, setOpen } = useCommandPalette();
   const { currentUser } = useCurrentUser();
-  const { user: clerkUser } = useUser();
-  const { signOut } = useClerk();
+  const { signOut } = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    signOut();
+    router.push("/login");
+  };
 
   return (
     <>
@@ -73,11 +79,11 @@ export function Header() {
             }
           >
             <Avatar className="h-8 w-8">
-              {clerkUser?.imageUrl ? (
-                <AvatarImage src={clerkUser.imageUrl} alt="" />
+              {currentUser?.user.avatarUrl ? (
+                <AvatarImage src={currentUser.user.avatarUrl} alt="" />
               ) : null}
               <AvatarFallback className="bg-brand/10 text-xs font-medium text-brand">
-                {initials(currentUser?.user.name ?? clerkUser?.firstName ?? "?")}
+                {initials(currentUser?.user.name ?? "?")}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
@@ -85,12 +91,10 @@ export function Header() {
             <DropdownMenuGroup>
               <DropdownMenuLabel className="flex flex-col">
                 <span className="text-sm">
-                  {currentUser?.user.name ?? clerkUser?.fullName ?? "…"}
+                  {currentUser?.user.name ?? "…"}
                 </span>
                 <span className="text-xs font-normal text-muted-foreground">
-                  {currentUser?.user.email ??
-                    clerkUser?.primaryEmailAddress?.emailAddress ??
-                    ""}
+                  {currentUser?.user.email ?? ""}
                 </span>
                 {currentUser ? (
                   <span className="mt-1 text-xs font-normal text-muted-foreground">
@@ -104,7 +108,7 @@ export function Header() {
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => void signOut({ redirectUrl: "/login" })}>
+            <DropdownMenuItem onClick={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" aria-hidden />
               Sign out
             </DropdownMenuItem>

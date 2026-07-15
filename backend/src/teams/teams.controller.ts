@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApplicationStatus, ContentStatus, InvitationStatus } from '@prisma/client';
-import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -35,7 +35,7 @@ import { TeamsService } from './teams.service';
 type Authed = NonNullable<AuthedRequest['authUser']>;
 
 @Controller('teams/:teamId')
-@UseGuards(ClerkAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TeamsController {
   constructor(
     private readonly teams: TeamsService,

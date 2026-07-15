@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/lib/auth";
 import { CurrentUserProvider } from "@/lib/current-user";
 import "./globals.css";
 
@@ -27,18 +27,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html
-        lang="en"
-        className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      >
-        <body className="min-h-full bg-background text-foreground">
+    <html
+      lang="en"
+      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full bg-background text-foreground">
+        <AuthProvider>
           <CurrentUserProvider>
             <TooltipProvider delay={150}>{children}</TooltipProvider>
           </CurrentUserProvider>
-          <Toaster position="top-right" />
-        </body>
-      </html>
-    </ClerkProvider>
+        </AuthProvider>
+        <Toaster position="top-right" />
+      </body>
+    </html>
   );
 }

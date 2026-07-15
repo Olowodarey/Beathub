@@ -1,5 +1,5 @@
 import { Body, Controller, Param, Patch, UseGuards } from '@nestjs/common';
-import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthedRequest } from '../auth/request-user.type';
 import { CampaignsService } from './campaigns.service';
@@ -8,7 +8,7 @@ import { ReviewCampaignDto } from './dto/review-campaign.dto';
 type Authed = NonNullable<AuthedRequest['authUser']>;
 
 @Controller('campaigns')
-@UseGuards(ClerkAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class CampaignsController {
   constructor(private readonly campaigns: CampaignsService) {}
 
