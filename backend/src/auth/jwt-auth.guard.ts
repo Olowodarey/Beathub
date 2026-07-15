@@ -43,11 +43,27 @@ export class JwtAuthGuard implements CanActivate {
   // authenticate. The team is bootstrapped on demand. Whichever user matches
   // OWNER_EMAIL is assigned the OWNER role; everyone else joins as MEMBER +
   // LISTENER. Upgrades to CREATOR happen via the creator-application flow.
+  //
+  // The OWNER_EMAIL account is also reconciled on every sign-in: if it already
+  // has a membership that isn't OWNER (e.g. it was created before OWNER_EMAIL
+  // was configured), it gets promoted to OWNER.
   private async ensureDefaultMembership(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const ownerEmail = process.env.OWNER_EMAIL?.toLowerCase();
+    const isOwner = !!ownerEmail && user?.email.toLowerCase() === ownerEmail;
+
     const existing = await this.prisma.membership.findFirst({
       where: { userId },
     });
-    if (existing) return;
+    if (existing) {
+      if (isOwner && existing.role !== 'OWNER') {
+        await this.prisma.membership.update({
+          where: { id: existing.id },
+          data: { role: 'OWNER', personaType: null },
+        });
+      }
+      return;
+    }
 
     let defaultTeam = await this.prisma.team.findFirst({
       orderBy: { createdAt: 'asc' },
@@ -57,10 +73,6 @@ export class JwtAuthGuard implements CanActivate {
         data: { name: 'Beathub', slug: 'beathub' },
       });
     }
-
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    const ownerEmail = process.env.OWNER_EMAIL?.toLowerCase();
-    const isOwner = !!ownerEmail && user?.email.toLowerCase() === ownerEmail;
 
     await this.prisma.membership.create({
       data: {
