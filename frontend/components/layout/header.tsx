@@ -52,12 +52,14 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:gap-3 sm:px-4">
-        <MobileNav />
+        <div className="flex flex-1 items-center">
+          <MobileNav />
+        </div>
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Search or run a command"
-          className="flex h-9 flex-1 items-center gap-2 rounded-md border bg-muted/40 px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted sm:max-w-md"
+          className="flex h-9 w-full max-w-md items-center gap-2 rounded-md border bg-muted/40 px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted"
         >
           <Search className="h-4 w-4 shrink-0" aria-hidden />
           <span className="hidden flex-1 truncate sm:inline">
@@ -67,6 +69,7 @@ export function Header() {
             <span className="text-[11px]">⌘</span>K
           </kbd>
         </button>
+        <div className="flex flex-1 items-center justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -114,6 +117,7 @@ export function Header() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </header>
       <CommandPalette open={open} onOpenChange={setOpen} />
     </>
