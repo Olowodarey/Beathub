@@ -25,6 +25,7 @@ async function doFetch<T>(
 ): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -72,6 +73,7 @@ export function useApiClient(): ApiClient {
       const token = await getToken();
       const res = await fetch(`${BASE}${path}`, {
         method: "POST",
+        credentials: "include",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: form,
       });
