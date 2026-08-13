@@ -3,8 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { promises as fs, createReadStream, statSync } from 'fs';
-import type { Response } from 'express';
 import { parseBuffer } from 'music-metadata';
 import { PrismaService } from '../prisma/prisma.service';
 import { mapContent } from '../common/mappers';
@@ -12,7 +10,7 @@ import { requireTeamRole } from '../common/auth-helpers';
 import type { AuthedRequest } from '../auth/request-user.type';
 import { CreateContentDto } from './dto/create-content.dto';
 import { UpdateContentStatusDto } from './dto/update-content-status.dto';
-import { pathForContent } from './storage';
+import { putAudio } from './storage';
 
 const AUDIO_MIME_ALLOWLIST = new Set([
   'audio/mpeg',
@@ -76,12 +74,11 @@ export class ContentService {
       include: { uploader: true },
     });
 
-    const targetPath = pathForContent(created.id);
-    await fs.writeFile(targetPath, file.buffer);
+    const audioUrl = await putAudio(created.id, file.buffer, file.mimetype);
 
     const updated = await this.prisma.content.update({
       where: { id: created.id },
-      data: { audioUrl: `/content/${created.id}/stream` },
+      data: { audioUrl },
       include: { uploader: true },
     });
 
@@ -95,56 +92,6 @@ export class ContentService {
       orderBy: { createdAt: 'desc' },
     });
     return items.map(mapContent);
-  }
-
-  async streamAudio(id: string, range: string | undefined, res: Response) {
-    const content = await this.prisma.content.findUnique({ where: { id } });
-    if (!content || !content.audioMimeType) {
-      throw new NotFoundException('audio not available');
-    }
-    if (content.status !== 'APPROVED') {
-      throw new NotFoundException('audio not available');
-    }
-
-    const path = pathForContent(id);
-    let stats: ReturnType<typeof statSync>;
-    try {
-      stats = statSync(path);
-    } catch {
-      throw new NotFoundException('audio file missing on disk');
-    }
-
-    const total = stats.size;
-    const mime = content.audioMimeType;
-
-    if (range) {
-      const match = /^bytes=(\d+)-(\d*)$/.exec(range);
-      if (!match) {
-        res.status(416).setHeader('Content-Range', `bytes */${total}`);
-        res.end();
-        return;
-      }
-      const start = Number(match[1]);
-      const end = match[2] ? Number(match[2]) : total - 1;
-      if (start >= total || end >= total || start > end) {
-        res.status(416).setHeader('Content-Range', `bytes */${total}`);
-        res.end();
-        return;
-      }
-      res.status(206);
-      res.setHeader('Content-Range', `bytes ${start}-${end}/${total}`);
-      res.setHeader('Accept-Ranges', 'bytes');
-      res.setHeader('Content-Length', String(end - start + 1));
-      res.setHeader('Content-Type', mime);
-      createReadStream(path, { start, end }).pipe(res);
-      return;
-    }
-
-    res.status(200);
-    res.setHeader('Accept-Ranges', 'bytes');
-    res.setHeader('Content-Length', String(total));
-    res.setHeader('Content-Type', mime);
-    createReadStream(path).pipe(res);
   }
 
   async recordPlay(id: string) {

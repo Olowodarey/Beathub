@@ -4,8 +4,10 @@
  * Each iTunes track has a ~30s preview MP3. This script:
  *   1. Looks up the default team
  *   2. Ensures a synthetic User per artist (upserted on a stable email)
- *   3. Downloads each preview into backend/uploads/<contentId>
+ *   3. Downloads each preview and uploads it to Vercel Blob
  *   4. Inserts an APPROVED Content row so the track appears in Library immediately
+ *
+ * Requires BLOB_READ_WRITE_TOKEN in backend/.env (from the Vercel Blob store).
  *
  * Idempotent: re-runs skip tracks already inserted (by artist + title).
  *
@@ -13,11 +15,10 @@
  */
 
 import 'dotenv/config';
-import { promises as fs } from 'fs';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { parseBuffer } from 'music-metadata';
-import { pathForContent, uploadsRoot } from '../src/content/storage';
+import { putAudio } from '../src/content/storage';
 
 interface SearchBucket {
   term: string;
@@ -72,7 +73,6 @@ async function main() {
       );
     }
     console.log(`Seeding into team: ${team.name} (${team.id})\n`);
-    await fs.mkdir(uploadsRoot(), { recursive: true });
 
     let inserted = 0;
     let skipped = 0;
@@ -183,10 +183,10 @@ async function seedTrack(
     },
   });
 
-  await fs.writeFile(pathForContent(created.id), buffer);
+  const audioUrl = await putAudio(created.id, buffer, 'audio/mpeg');
   await prisma.content.update({
     where: { id: created.id },
-    data: { audioUrl: `/content/${created.id}/stream` },
+    data: { audioUrl },
   });
 
   console.log(`   ✓ ${track.trackName} — ${track.artistName}`);

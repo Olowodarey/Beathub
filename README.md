@@ -83,7 +83,7 @@ The browser holds a JWT (issued by the API) in `localStorage` and sends it as an
 
 ## 📂 Project structure
 
-```
+```text
 beathub/
 ├── frontend/                 # Next.js app (App Router)
 │   ├── app/                  # Routes: /login, /dashboard/*, /invite/[token]

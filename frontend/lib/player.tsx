@@ -107,7 +107,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!currentTrack || !audioRef.current) return;
     const el = audioRef.current;
-    const src = currentTrack.audioUrl ? `${BASE}${currentTrack.audioUrl}` : null;
+    // audioUrl is an absolute Blob CDN URL for uploaded tracks; older/relative
+    // values still get prefixed with the API base for backward compatibility.
+    const raw = currentTrack.audioUrl;
+    const src = raw
+      ? raw.startsWith("http")
+        ? raw
+        : `${BASE}${raw}`
+      : null;
     if (!src) return;
     el.src = src;
     el.load();
