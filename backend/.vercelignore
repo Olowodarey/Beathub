@@ -1,0 +1,6 @@
+uploads
+dist
+test
+coverage
+*.spec.ts
+image*.png
