@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { parseBuffer } from 'music-metadata';
 import { PrismaService } from '../prisma/prisma.service';
 import { mapContent } from '../common/mappers';
 import { requireTeamRole } from '../common/auth-helpers';
@@ -57,6 +56,9 @@ export class ContentService {
       throw new BadRequestException(`unsupported audio type: ${file.mimetype}`);
     }
 
+    // music-metadata is ESM-only; load it via dynamic import so it works from
+    // this CommonJS build and gets traced into the Vercel function.
+    const { parseBuffer } = await import('music-metadata');
     const meta = await parseBuffer(file.buffer, file.mimetype).catch(() => null);
     const durationSeconds = Math.max(1, Math.round(meta?.format.duration ?? 0));
 
